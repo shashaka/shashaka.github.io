@@ -1,0 +1,56 @@
+---
+title: 베르트랑 공준
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/4948 <br/><br/>
+
+이번은 일정 범위 내에서 소수를 구하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    private static int[] primeNumbers = new int[123456 * 2 + 1];
+
+    public static void main(String args[]) {
+
+        primeNumbers[1] = 1;
+        for (int i = 2; i < primeNumbers.length - 1; i++) {
+            int k = 2;
+            while (true) {
+                if (k * i > primeNumbers.length - 1) {
+                    break;
+                }
+                primeNumbers[k * i]++;
+                k++;
+            }
+        }
+
+        Scanner sc = new Scanner(System.in);
+
+        while (true) {
+            int val = sc.nextInt();
+            if (val == 0) {
+                break;
+            }
+
+            int count = 0;
+            for (int i = val + 1; i <= val * 2; i++) {
+                if (primeNumbers[i] == 0) {
+                    count++;
+                }
+            }
+            System.out.println(count);
+        }
+    }
+}
+</code></pre>
+
+이번 문제에서는 들어오는 값의 범위가 123456이고 2n은 123456*2 만큼까지의 범위이므로 해당 값까지의 모든 소수를 구해놓습니다.<br/>
+그 후, 들어온 값 범위에서 소수를 모두 찾아 갯수를 출력해주도록 합니다.<br/>
+
+</p>
+

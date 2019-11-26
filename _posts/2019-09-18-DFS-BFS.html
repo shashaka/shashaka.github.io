@@ -1,0 +1,91 @@
+---
+title: DFS와 BFS
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1260 <br/><br/>
+
+이번은 DFS와 BFS를 다루는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+int visited[1001] = {0};
+int graph[1001][1001] = {0};
+int queue[1001] = { 0 };
+
+void dfs(int v, int N);
+void bfs(int v, int N);
+
+int main(void) {
+
+	int N, M, V, x, y;
+	scanf("%d %d %d", &N, &M, &V);
+
+	for (int i = 0; i < M; i++)
+	{
+		scanf("%d %d", &x, &y);
+		graph[x][y] = 1;
+		graph[y][x] = 1;
+	}
+
+	dfs(V, N);
+	for (int i = 0; i < 1001; i++)
+	{
+		visited[i] = 0;
+	}
+	printf("\n");
+	bfs(V,N);
+}
+
+void dfs(int v, int N) {
+
+	if (visited[v] == 1)
+	{
+		return;
+	}
+
+	printf("%d ", v);
+	visited[v] = 1;
+
+	for (int i = 1; i <= N; i++)
+	{
+		if (graph[v][i] == 1 || graph[i][v] == 1) {
+			dfs(i, N);
+		}
+	}
+}
+
+void bfs(int v, int N) {
+	int front=0, rear = 0, pop;
+	queue[front] = v;
+
+	while (front <= rear)
+	{
+		pop = queue[front];
+		front++;
+		visited[pop] = 1;
+		printf("%d ", pop);
+
+		for (int i = 1; i <= N; i++)
+		{
+			if ((graph[pop][i] == 1 || graph[i][pop] == 1) && visited[i] == 0) {
+				queue[++rear] = i;
+				visited[i] = 1;
+			}
+		}
+	}
+}
+</code></pre>
+
+DFS와 BFS의 구현으로 풀 수 있는 문제입니다.<br/>
+DFS는 보통 재귀적 방법이 구현의 코드양이 적어 많이 사용이 됩니다.<br/>
+BFS는 DFS와 달리, 하나의 queue에 값을 넣고 빼는 것을 반복함으로써 구현이 가능합니다.<br/>
+graph라는 2차원 배열을 선언하고, 해당 배열에 간선을 체크해놓도록 합니다.<br/>
+작은 수 부터 차례대로 나와야 하므로, 하나의 정점에 대해 1부터 N까지 순회하여 graph의 값이 1인지 체크하고, 방문하지 않았던 값이면 순회를 이어가도록 합니다.<br/>
+dfs에서 visited를 사용하므로, bfs 이전에 해당 값을 초기화해주는 것을 잊지 않도록 합니다.<br/>
+
+
+</p>
+

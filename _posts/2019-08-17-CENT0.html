@@ -1,0 +1,57 @@
+---
+title: 동전 0  
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/11047 <br/><br/>
+
+이번은 동전의 조건이 특별해서 동적 프로그래밍보다 빠르게 답을 찾을 수 있는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+static int* arr;
+
+int main(void) {
+
+	int N, TOTAL;
+
+	scanf("%d %d", &N, &TOTAL);
+
+	arr = new int[N];
+
+	for (int i = 0; i < N; i++)
+	{
+		scanf("%d", &arr[i]);
+	}
+
+	int count = 0;
+
+	for (int i = N - 1; i >= 0; i--)
+	{
+		while (TOTAL >= arr[i])
+		{
+			TOTAL -= arr[i];
+			count++;
+		}
+
+		if (TOTAL == 0)
+		{
+			break;
+		}
+	}
+
+	printf("%d", count);
+
+	return 0;
+}
+</code></pre>
+
+
+
+동전의 값이 오름차순으로 주어지고, 동전의 갯수가 제한이 없으므로 큰 동전으로 해당 값을 만들수록 동전을 사용하는 횟수가 줄어듭니다.<br/>
+따라서 큰 동전부터 차례로 해당 값을 만들고, 전체 count를 return 해주도록 합니다.<br/>
+<br/>
+</p>
+

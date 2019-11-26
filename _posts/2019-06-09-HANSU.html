@@ -1,0 +1,52 @@
+---
+title: 한수
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1065 <br/><br/>
+
+이번은 한수를 찾는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String args[]) {
+
+        Scanner scanner = new Scanner(System.in);
+
+        int size = scanner.nextInt();
+
+        int ret = 0;
+
+        for (int i = 1; i <= size; i++) {
+            String value = String.valueOf(i);
+            int diff = -1;
+            boolean isHansu = true;
+            for (int k = 0; k < value.length() - 1; k++) {
+                if (k == 0) {
+                    diff = Integer.parseInt(String.valueOf(value.charAt(k))) - Integer.parseInt(String.valueOf(value.charAt(k + 1)));
+                } else {
+                    int tempDiff = Integer.parseInt(String.valueOf(value.charAt(k))) - Integer.parseInt(String.valueOf(value.charAt(k + 1)));
+                    if (tempDiff != diff) {
+                        isHansu = false;
+                        break;
+                    }
+                }
+            }
+            if (isHansu) {
+                ret++;
+            }
+        }
+        System.out.println(ret);
+    }
+}
+</code></pre>
+
+각 자리의 수가 등차수열을 이루는 수를 찾는 문제입니다.<br/>
+각 자리의 수를 String으로 받은 이후, 각 자리의 수를 받아 앞,뒤의 수를 체크하여 차이를 저장합니다.<br/>
+전체 자리 수를 체크하는 동안 모두의 차가 같으면 ret 값을 1씩 올려주고, 전체 값을 모두 체크하면 종료합니다.<br/>
+</p>
+

@@ -1,0 +1,129 @@
+---
+title: User Defined Types
+layout: post
+categories: cassandra
+---
+
+<!-- Text stuff -->
+<p>
+CQL은 사용자 정의 유형 (UDT)의 정의를 지원합니다.<br/>
+이러한 유형은 아래에 설명 된 create_type_statement, alter_type_statement 및 drop_type_statement를 사용하여 작성, 수정 및 제거 할 수 있습니다.<br/>
+그러나 일단 만들어지면, UDT는 단순히 그 이름으로 참조됩니다 :<br/>
+
+<pre><code>user_defined_type ::=  udt_name
+udt_name          ::=  [ keyspace_name '.' ] identifier
+</code></pre>
+
+<br/>
+<h3>Creating a UDT</h3>
+<br/>
+새 사용자 정의 유형 작성은 다음에 의해 정의 된 CREATE TYPE 문을 사용하여 수행됩니다.<br/>
+
+<pre><code>create_type_statement ::=  CREATE TYPE [ IF NOT EXISTS ] udt_name
+                               '(' field_definition ( ',' field_definition )* ')'
+field_definition      ::=  identifier cql_type
+</code></pre>
+
+UDT는 이름(해당 타입으로 선언되는 칼럼에 사용되는)을 가지며 이름을 지정하는 필드와 유형을 지정하는 필드로 구성됩니다.<br/>
+필드 이름은 콜렉션 또는 다른 UDT를 포함하여 모든 유형이 될 수 있습니다.<br/>
+예를 들어 :<br/>
+
+<pre><code>CREATE TYPE phone (
+    country_code int,
+    number text,
+)
+
+CREATE TYPE address (
+    street text,
+    city text,
+    zip text,
+    phones map<text, phone>
+)
+
+CREATE TABLE user (
+    name text PRIMARY KEY,
+    addresses map<text, frozen<address>
+>
+)
+</code></pre>
+
+참고 사항 :<br/>
+<br/>
+- IF NOT EXISTS 옵션을 사용하지 않으면 이미 존재하는 유형을 생성하려고하면 오류가 발생합니다.<br/>
+사용되는 경우 유형이 이미 존재하면 아무런 동작을 하지 않습니다.<br/>
+<br/>
+- 유형은 본질적으로 생성 된 키 스페이스에 바인드되며 해당 키 스페이스에서만 사용할 수 있습니다.<br/>
+생성시, 유형 이름 앞에 키 스페이스 이름이 있으면 해당 키 스페이스에 유형 이름이 작성됩니다.<br/>
+그렇지 않으면, 현재 키 스페이스에 작성됩니다.<br/>
+<br/>
+- Cassandra 4.0에서 UDT는 대부분의 경우 동결되어야하므로 위의 테이블 정의에서 <br/>
+frozen<address> 를 사용해야합니다.<br/>
+자세한 내용은 고정 섹션을 참조하십시오.<br/>
+<br/>
+
+<h3>UDT literals</h3>
+<br/>
+일단 사용자 정의 된 타입이 생성되면, 값은 UDT 리터럴을 사용하여 입력 될 수 있습니다 :<br/>
+<br/>
+<pre><code>udt_literal ::=  '{' identifier ':' term ( ',' identifier ':' term )* '}'
+</code></pre>
+
+즉, UDT 리터럴은 맵 리터럴과 비슷하지만 해당 키는 해당 유형의 필드 이름입니다.<br/>
+예를 들어, 다음을 사용하여 이전 섹션에서 정의한 테이블에 삽입 할 수 있습니다.<br/>
+
+<pre><code>INSERT INTO user (name, addresses)
+          VALUES ('z3 Pr3z1den7', {
+              'home' : {
+                  street: '1600 Pennsylvania Ave NW',
+                  city: 'Washington',
+                  zip: '20500',
+                  phones: { 'cell' : { country_code: 1, number: '202 456-1111' },
+                            'landline' : { country_code: 1, number: '...' } }
+              },
+              'work' : {
+                  street: '1600 Pennsylvania Ave NW',
+                  city: 'Washington',
+                  zip: '20500',
+                  phones: { 'fax' : { country_code: 1, number: '...' } }
+              }
+          })
+</code></pre>
+
+유효한 입력을 위해서는 UDT 리터럴은 리터럴인 유형으로 정의된 필드만을 포함해야 하지만 일부 필드는 생략 할 수 있습니다 (이 경우 해당 값은 null입니다).<br/>
+<br/>
+
+<h3>Altering a UDT</h3>
+
+기존 사용자 정의 유형은 ALTER TYPE 문을 사용하여 수정할 수 있습니다 :<br/>
+
+<pre><code>alter_type_statement    ::=  ALTER TYPE udt_name alter_type_modification
+alter_type_modification ::=  ADD field_definition
+                             | RENAME identifier TO identifier ( identifier TO identifier )*
+</code></pre>
+
+할 수있는 일 :<br/>
+<br/>
+- 유형에 새 필드를 추가합니다 (ALTER TYPE address ADD country text).<br/>
+그 새로운 필드는 추가 전에 작성된 모든 값에 대해 null이됩니다.<br/>
+<br/>
+- 유형의 필드 이름을 바꿉니다 (ALTER TYPE address RENAME zip TO zipcode).<br/>
+<br/>
+
+<h3>Dropping a UDT</h3>
+<br/>
+DROP TYPE 문을 사용하여 기존 사용자 정의 유형을 삭제할 수 있습니다.<br/>
+
+<pre><code>drop_type_statement ::=  DROP TYPE [ IF EXISTS ] udt_name
+</code></pre>
+
+유형을 삭제하면 해당 유형이 즉시 되돌릴 수 없게됩니다.<br/>
+그러나 다른 유형, 테이블 또는 함수에서 계속 사용중인 유형을 삭제하려고 시도하면 오류가 발생합니다.<br/>
+<br/>
+삭제 된 유형이 없는 경우 IF EXISTS가 사용되지 않으면 오류가 반환됩니다.<br/>
+사용되는 경우 작업은 아무 작업도 수행하지 않습니다.<br/>
+
+<br/>
+출처 : http://cassandra.apache.org/doc/latest/cql/types.html	 <br/>
+<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+</p>

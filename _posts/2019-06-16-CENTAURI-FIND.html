@@ -1,0 +1,75 @@
+---
+title: Fly me to the Alpha Centauri 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1011 <br/><br/>
+
+이번은 거리에 따른 장치 사용 횟수를 출력하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.io.*;
+
+public class Main {
+
+    public static void main(String args[]) throws IOException {
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out));
+
+        int size = Integer.parseInt(reader.readLine());
+
+        for (int i = 0; i < size; i++) {
+            String[] line = reader.readLine().split(" ");
+            double start = Double.parseDouble(line[0]);
+            double end = Double.parseDouble(line[1]);
+
+            double dist = end - start;
+
+            int n = (int) (Math.floor(Math.sqrt(dist)));
+
+            int count = getCount(dist, n);
+
+            writer.write(String.valueOf(count) + "\n");
+        }
+
+        writer.flush();
+        writer.close();
+        reader.close();
+    }
+
+    private static int getCount(double dist, int n) {
+        int count = 0;
+
+        if (n * (n + 1) < dist) {
+            count = 2 * n + 1;
+        } else if (dist == n * n) {
+            count = 2 * n - 1;
+        } else {
+            count = 2 * n;
+        }
+        return count;
+    }
+}
+</code></pre>
+
+이 문제의 규칙을 보면 시작과 끝은 각각 1로 고정되어 있고, 속도는 1씩만 올릴 수 있기 때문에 최소의 횟수로 거리를 이동하려면 최고 속도를 올릴수록 줄어들게 됩니다.<br/>
+예를 들면, 최고 속도를 3까지 올리는 경우는 아래와 같이 볼 수 있습니다.<br/>
+
+<pre><code>
+12321     [n*n]
+123211    [n*n+ x] 
+123321    [n*(n+1)]
+1233321   [n*(n+1) + x]
+</code></pre>
+
+값이 1씩 올라가기 때문에 전체 합의 값은 n(n+1)/2 이지만, 다시 내려가는 수열이 있기 때문에 123321와 같은 형식인 경우는 n(n+1)가 되게 됩니다.<br/>
+12321의 경우는 앞의 경우에서 가장 큰 수인 n이 빠졌으므로 n(n+1) -n = n*n 이 되게 됩니다.<br/>
+거리의 값의 dist에 대해서 제곱을 하면 dist가 되는 수 x에 대해서 소수점을 제외하면, x*x는 무조건 dist보다 같거나 작게 되고, (x+1)*(x+1)은 dist보다 크게 됩니다.<br/>
+따라서 n * (n + 1)이 dist보다 작은 경우는 전체 카운트는 1233321 형식이므로 2*n + 1<br/>
+dist와 n*n 이 같은 경우는 12321 형식이므로 2*n - 1<br/>
+n * (n + 1)와 dist가 같은 경우는 123321 형식이므로 2*n이 되게 됩니다.<br/>
+12333211 과 같은 형식은 1234321로 변경이 되기 때문에 존재하지 않으므로 위 세가지 조건을 체크해주고 출력해주면 됩니다.<br/>
+</p>
+

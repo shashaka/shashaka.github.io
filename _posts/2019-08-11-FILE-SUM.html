@@ -1,0 +1,105 @@
+---
+title: 파일 합치기  
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/11066 <br/><br/>
+
+이번은 파일을 합쳐 하나로 모으는 최소 비용을 구하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+int getMin(int start, int end);
+
+static int* arr;
+static int** cache;
+
+void initCache(int length) {
+	cache = new int*[length];
+	for (int k = 0; k < length; k++)
+	{
+		cache[k] = new int[length];
+		for (int m = 0; m < length; m++)
+		{
+			cache[k][m] = -1;
+		}
+	}
+}
+
+int main(void) {
+
+	int N, length, val;
+
+	scanf("%d", &N);
+
+	for (int i = 0; i < N; i++)
+	{
+		scanf("%d", &length);
+		initCache(length);
+		arr = new int[length];
+		for (int k = 0; k < length; k++)
+		{
+			scanf("%d", &val);
+			arr[k] = val;
+		}
+
+		printf("%d\n", getMin(0, length - 1));
+
+	}
+
+	return 0;
+}
+
+int getMin(int start, int end) {
+
+	if (start >= end)
+	{
+		return 0;
+	}
+
+	if (cache[start][end] != -1)
+	{
+		return cache[start][end];
+	}
+
+	if (end - start == 1)
+	{
+		return arr[start] + arr[end];
+	}
+
+	int sum = 0;
+	for (int i = start; i <= end; i++)
+	{
+		sum += arr[i];
+	}
+
+	
+	for (int i = start; i < end; i++)
+	{
+		int ret = getMin(start, i) + getMin(i + 1, end) + sum;
+		if (cache[start][end] == -1 || ret < cache[start][end])
+		{
+			cache[start][end] = ret;
+		}
+	}
+
+	return cache[start][end];
+}
+</code></pre>
+
+
+
+문제에서는 파일의 두 부분을 합친다고만 써있지만, 실제로 구현을 진행해보면 나란히 붙어있는 두 개의 파일만 붙여야 답이 맞다는 것을 알게 됩니다.<br/>
+인근의 두 파일을 붙이는 로직이므로 예를 들어 1부터 4까지의 최소 파일 합을 구한다고 하면,<br/>
+f(1,4) = Math.min(f(1,1)+f(2,4), f(1,2)+f(3,4),f(1,3)+f(4,4)) <br/>
+로 표현할 수 있습니다.<br/>
+쪼개질 수 없는 처음 단위의 파일은 더해질 때 본인의 수는 더하지 않으므로,<br/>
+f(1,2) = arr[1] + arr[2]<br/>
+f(1,1) = 0<br/>
+이 되게 됩니다.<br/>
+위와 같이 구현하여 값을 return 해주도록 합니다.<br/>
+<br/>
+</p>
+

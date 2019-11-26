@@ -1,0 +1,213 @@
+---
+title: Aggregations
+layout: post
+categories: spark
+---
+
+<p>
+내장 DataFrames 함수는 count(), countDistinct(), avg(), max(), min() 등과 같은 공통 집계를 제공합니다.<br/>
+이러한 기능은 DataFrames용으로 설계되었지만 Spark SQL에는 Scala 및 Java의 일부 기능에 대해 강력한 형식의 데이터 집합을 사용할 수있는 버전도 있습니다.
+또한 사용자는 사전 정의된 집계 함수 뿐만 아니라 자체적으로 작성한 함수도 사용가능합니다.
+
+<br/>
+<h3>Untyped User-Defined Aggregate Functions</h3>
+<br/>
+사전 정의되지 않은 집계 함수를 구현하려면 UserDefinedAggregateFunction 추상 클래스를 상속받아 사용하여야 합니다.
+예를 들어 사용자에 의해 정의된 평균은 다음과 같습니다.
+<br/>
+<pre><code>import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.expressions.MutableAggregationBuffer;
+import org.apache.spark.sql.expressions.UserDefinedAggregateFunction;
+import org.apache.spark.sql.types.DataType;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+
+public static class MyAverage extends UserDefinedAggregateFunction {
+
+  private StructType inputSchema;
+  private StructType bufferSchema;
+
+  public MyAverage() {
+    List&lt;StructField&gt; inputFields = new ArrayList&lt;&gt;();
+    inputFields.add(DataTypes.createStructField("inputColumn", DataTypes.LongType, true));
+    inputSchema = DataTypes.createStructType(inputFields);
+
+    List&lt;StructField&gt; bufferFields = new ArrayList&lt;&gt;();
+    bufferFields.add(DataTypes.createStructField("sum", DataTypes.LongType, true));
+    bufferFields.add(DataTypes.createStructField("count", DataTypes.LongType, true));
+    bufferSchema = DataTypes.createStructType(bufferFields);
+  }
+  // Data types of input arguments of this aggregate function
+  public StructType inputSchema() {
+    return inputSchema;
+  }
+  // Data types of values in the aggregation buffer
+  public StructType bufferSchema() {
+    return bufferSchema;
+  }
+  // The data type of the returned value
+  public DataType dataType() {
+    return DataTypes.DoubleType;
+  }
+  // Whether this function always returns the same output on the identical input
+  public boolean deterministic() {
+    return true;
+  }
+  // Initializes the given aggregation buffer. The buffer itself is a `Row` that in addition to
+  // standard methods like retrieving a value at an index (e.g., get(), getBoolean()), provides
+  // the opportunity to update its values. Note that arrays and maps inside the buffer are still
+  // immutable.
+  public void initialize(MutableAggregationBuffer buffer) {
+    buffer.update(0, 0L);
+    buffer.update(1, 0L);
+  }
+  // Updates the given aggregation buffer `buffer` with new input data from `input`
+  public void update(MutableAggregationBuffer buffer, Row input) {
+    if (!input.isNullAt(0)) {
+      long updatedSum = buffer.getLong(0) + input.getLong(0);
+      long updatedCount = buffer.getLong(1) + 1;
+      buffer.update(0, updatedSum);
+      buffer.update(1, updatedCount);
+    }
+  }
+  // Merges two aggregation buffers and stores the updated buffer values back to `buffer1`
+  public void merge(MutableAggregationBuffer buffer1, Row buffer2) {
+    long mergedSum = buffer1.getLong(0) + buffer2.getLong(0);
+    long mergedCount = buffer1.getLong(1) + buffer2.getLong(1);
+    buffer1.update(0, mergedSum);
+    buffer1.update(1, mergedCount);
+  }
+  // Calculates the final result
+  public Double evaluate(Row buffer) {
+    return ((double) buffer.getLong(0)) / buffer.getLong(1);
+  }
+}
+
+// Register the function to access it
+spark.udf().register("myAverage", new MyAverage());
+
+Dataset&lt;Row&gt; df = spark.read().json("examples/src/main/resources/employees.json");
+df.createOrReplaceTempView("employees");
+df.show();
+// +-------+------+
+// |   name|salary|
+// +-------+------+
+// |Michael|  3000|
+// |   Andy|  4500|
+// | Justin|  3500|
+// |  Berta|  4000|
+// +-------+------+
+
+Dataset&lt;Row&gt; result = spark.sql("SELECT myAverage(salary) as average_salary FROM employees");
+result.show();
+// +--------------+
+// |average_salary|
+// +--------------+
+// |        3750.0|
+// +--------------+
+</code></pre>
+<br/>
+<h3>Type-Safe User-Defined Aggregate Functions</h3>
+<br/>
+강력한 형식의 데이터 집합에 대한 사용자 정의 집계는 Aggregator 추상 클래스를 중심으로 이루어집니다.<br/>
+예를 들어 type-safe한 사용자 정의 평균은 다음과 같습니다.<br/>
+
+<code><pre>import java.io.Serializable;
+
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoder;
+import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.TypedColumn;
+import org.apache.spark.sql.expressions.Aggregator;
+
+public static class Employee implements Serializable {
+  private String name;
+  private long salary;
+
+  // Constructors, getters, setters...
+
+}
+
+public static class Average implements Serializable  {
+  private long sum;
+  private long count;
+
+  // Constructors, getters, setters...
+
+}
+
+public static class MyAverage extends Aggregator&lt;Employee, Average, Double&gt; {
+  // A zero value for this aggregation. Should satisfy the property that any b + zero = b
+  public Average zero() {
+    return new Average(0L, 0L);
+  }
+  // Combine two values to produce a new value. For performance, the function may modify `buffer`
+  // and return it instead of constructing a new object
+  public Average reduce(Average buffer, Employee employee) {
+    long newSum = buffer.getSum() + employee.getSalary();
+    long newCount = buffer.getCount() + 1;
+    buffer.setSum(newSum);
+    buffer.setCount(newCount);
+    return buffer;
+  }
+  // Merge two intermediate values
+  public Average merge(Average b1, Average b2) {
+    long mergedSum = b1.getSum() + b2.getSum();
+    long mergedCount = b1.getCount() + b2.getCount();
+    b1.setSum(mergedSum);
+    b1.setCount(mergedCount);
+    return b1;
+  }
+  // Transform the output of the reduction
+  public Double finish(Average reduction) {
+    return ((double) reduction.getSum()) / reduction.getCount();
+  }
+  // Specifies the Encoder for the intermediate value type
+  public Encoder&lt;Average&gt; bufferEncoder() {
+    return Encoders.bean(Average.class);
+  }
+  // Specifies the Encoder for the final output value type
+  public Encoder&lt;Double&gt; outputEncoder() {
+    return Encoders.DOUBLE();
+  }
+}
+
+Encoder&lt;Employee&gt; employeeEncoder = Encoders.bean(Employee.class);
+String path = "examples/src/main/resources/employees.json";
+Dataset&lt;Employee&gt; ds = spark.read().json(path).as(employeeEncoder);
+ds.show();
+// +-------+------+
+// |   name|salary|
+// +-------+------+
+// |Michael|  3000|
+// |   Andy|  4500|
+// | Justin|  3500|
+// |  Berta|  4000|
+// +-------+------+
+
+MyAverage myAverage = new MyAverage();
+// Convert the function to a `TypedColumn` and give it a name
+TypedColumn&lt;Employee, Double&gt; averageSalary = myAverage.toColumn().name("average_salary");
+Dataset&lt;Double&gt; result = ds.select(averageSalary);
+result.show();
+// +--------------+
+// |average_salary|
+// +--------------+
+// |        3750.0|
+// +--------------+
+</code></pre>
+<br/>
+https://spark.apache.org/docs/latest/sql-getting-started.html#aggregations
+<br/>
+<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+
+</p>
+

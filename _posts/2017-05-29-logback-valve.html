@@ -1,0 +1,83 @@
+---
+title: Spring logback valve
+layout: post
+categories: springboot
+---
+
+<p>
+embedded tomcat을 사용하는 spring boot에서 request가 들어온 경우, 해당 request와 response를 log로 남기기 위해서 아래와 같이 logback-access 설정을 통해 logback valve를 설정할 수 있습니다. <br/>
+<br/>
+가장 먼저 resources 폴더에 아래와 같이 어떠한 형식으로 log를 남길 것인지에 대해서, 아래와 같이 xml 파일로 설정하도록 합니다.<br/>
+
+<pre><code>{{'<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%fullRequest%n%n%fullResponse</pattern>
+        </encoder>
+    </appender>
+
+    <appender-ref ref="STDOUT">
+    </appender-ref>
+</configuration>' | xml_escape}}
+</code></pre>
+
+이후, 아래와 같이 logback valve를 설정해주면 됩니다.<br/>
+
+<pre><code>package org.blog.test.config;
+
+import ch.qos.logback.access.tomcat.LogbackValve;
+import org.apache.catalina.Context;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
+import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
+import org.springframework.boot.context.embedded.tomcat.TomcatContextCustomizer;
+import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ResourceLoader;
+
+@Configuration
+public class LogbackValveConfig {
+
+    @Autowired
+    ResourceLoader resourceLoader;
+
+    @Bean
+    public EmbeddedServletContainerCustomizer embeddedServletContainerCustomizer() {
+        return container -> {
+            if (container instanceof TomcatEmbeddedServletContainerFactory) {
+                ((TomcatEmbeddedServletContainerFactory) container).addContextCustomizers((TomcatContextCustomizer) context -> {
+                    LogbackValve valve = new LogbackValve();
+                    valve.setFilename(resourceLoader.getResource(ResourceLoader.CLASSPATH_URL_PREFIX + "logback-access.xml").getFilename());
+                    context.getPipeline().addValve(valve);
+                });
+            }
+        };
+    }
+}
+</code></pre>
+
+위와 같이 설정한 이후, request가 들어오게 되면 아래와 같이 설정한대로 log가 찍히게 된 것을 확인할 수 있습니다.<br/>
+<br/>
+- 출력 결과<br/>
+
+<pre><code>GET /server/info HTTP/1.1
+host: localhost:8080
+connection: keep-alive
+upgrade-insecure-requests: 1
+user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36
+accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+accept-encoding: gzip, deflate, sdch, br
+accept-language: ko-KR,ko;q=0.8,en-US;q=0.6,en;q=0.4
+
+
+
+HTTP/1.1 200 OK
+Content-Length: 11
+Date: Mon, 29 May 2017 11:39:49 GMT
+Content-Type: text/html;charset=UTF-8
+</code></pre>
+
+전체 예제는 아래 링크에서 다운로드 받을 수 있다.<br/>
+<br/>
+https://gitlab.com/shashaka/logback-valve-project </p>

@@ -1,0 +1,107 @@
+---
+title: Loose-Coupled with Framework
+layout: post
+categories: blog
+---
+
+<p>
+실제 서비스의 업무 규칙과 Framework을 독립적으로 만드는 예제입니다.<br/>
+이번 예제에서는 Spring과 ratpack 두가지의 framework를 사용하여 만들어 보도록 합니다.<br/>
+전체적인 구조는 아래와 같이 구성하도록 합니다.<br/>
+<p><span class="image left"><img src="{{ 'assets/images/cleanFramework.png' | relative_url }}" alt="" /></span></p>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+유저의 입력을 받는 각각의 controller [SpringController, RatpackHandler]<br/>
+실제 업무 규칙만을 포함한 TaskRule [ logService로부터 값을 받아와 TaskRuleService에서 값을 return ]<br/>
+logService를 각각 구현한 Framework의 logService 구현체 [SpringLogServiceImpl, RatpackLogServiceImple]<br/>
+<br/>
+위와 같이 구현하게 되면 실제 기능을 담당하는 TaskRule은 Framework에 영향을 받지 않고, 동작이 가능하게 됩니다.<br/>
+Spring과 Ratpack에서 각각 위 component를 맵핑하는 코드는 아래와 같이 설정되게 됩니다.<br/>
+<br/>
+- SpringApp.java<br/>
+<br/>
+<pre><code>package org.test.shashaka;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.test.shashaka.log.service.LogService;
+import org.test.shashaka.taskrule.service.TasKRuleService;
+import org.test.shashaka.taskrule.service.impl.TaskRuleServiceImpl;
+
+@SpringBootApplication
+public class SpringApp {
+    private final LogService logService;
+
+    public SpringApp(LogService logService) {
+        this.logService = logService;
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(SpringApp.class);
+    }
+
+
+    @Bean
+    public TasKRuleService tasKRuleService() {
+        return new TaskRuleServiceImpl(logService);
+    }
+}
+</code></pre>
+<br/>
+- RatpackApp.java<br/>
+<br/>
+<pre><code>package org.test.shashaka;
+
+import org.test.shashaka.ratpack.module.RatpackModule;
+import org.test.shashaka.taskrule.service.TasKRuleService;
+import ratpack.guice.Guice;
+import ratpack.server.RatpackServer;
+import ratpack.server.ServerConfigBuilder;
+
+public class RatpackApp {
+    public static void main(String... args) throws Exception {
+        RatpackServer.start(server -> server
+                .serverConfig(serverConfigBuilder -> serverConfigBuilder.port(8080))
+                .registry(Guice.registry(bindingsSpec -> bindingsSpec.module(RatpackModule.class)))
+                .handlers(chain -> chain
+                        .get("rule", ctx -> ctx.render(ctx.get(TasKRuleService.class).executeRule()))
+                )
+        );
+    }
+}
+</code></pre>
+<br/>
+logService의 return값을 framework별로 다르게 설정하면,<br/>
+http://localhost:8080/rule 을 호출시, 어떤 framework에 실행되느냐에 따라 다른 결과를 나오게 할 수 있습니다.<br/>
+<br/>
+RatpackApp으로 application을 실행하게 되면,<br/>
+<pre><code>
+this is for Ratpack
+</code></pre>
+<br/>
+SpringApp으로 application을 실행하게 되면,<br/>
+<pre><code>
+this is for spring
+</code></pre>
+<br/>
+으로 출력이 변하는 것을 확인할 수 있습니다.<br/>
+<br/>
+이와 같이 Framework에 비종속적으로 애플리케이션을 만들게 되면, framework를 변경해야하는 경우에 대해 유연하게 대처가 가능합니다.<br/>
+<br/>
+전체 예제는 아래 링크에서 다운로드 받을 수 있습니다.<br/>
+<br/>
+https://gitlab.com/shashaka/clean-framework<a href="https://gitlab.com/shashaka/clean-framework"><a/><br/>
+</p>

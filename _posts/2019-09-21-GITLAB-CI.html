@@ -1,0 +1,44 @@
+---
+title: gitlab CI/CD 설정
+layout: post
+categories: blog
+---
+
+<p>
+gitlab에서 .gitlab-ci.yml 파일을 이용해 CI/CD를 설정하는 방법입니다.<br/>
+<br/>
+- .gitlab-ci.yml<br/>
+<br/>
+<pre><code>image: gradle:5.6.2-jdk8
+
+before_script:
+  - export GRADLE_USER_HOME=`pwd`/.gradle
+
+cache:
+  paths:
+    - .gradle/wrapper
+    - .gradle/caches
+
+package:
+  stage: build
+  script:
+    - ./gradlew assemble
+
+test:
+  stage: test
+  script:
+    - ./gradlew check
+
+</code></pre>
+<br/>
+위와 같이 stage를 통해 각 단계를 설정해주고, script를 통해 해당 stage때 실행될 명령어를 기재해주도록 합니다.<br/>
+cache를 사용하면 library를 재사용 가능해 build의 속도를 올려주는 것이 가능합니다.<br/>
+<br/>
+git update-index --chmod=+x gradlew<br/>
+<br/>
+실제 gitlab에서 해당 스크립트가 실행될 때, gradlew의 권한 문제가 발생할 수 있으므로,<br/>
+위 명령을 통해 실행 권한을 넣어주도록 합니다.<br/>
+<br/>
+전체 예제는 아래 링크에서 다운로드 가능합니다.<br/>
+<br/>
+https://gitlab.com/shashaka/api </p>

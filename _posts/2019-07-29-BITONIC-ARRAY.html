@@ -1,0 +1,104 @@
+---
+title: 가장 긴 바이토닉 부분 수열
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/11054 <br/><br/>
+
+이번은 LIS 응용 문제 1을 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+static int** arr;
+
+void initForward(int N);
+void initBackWard(int N);
+
+void init(int N) {
+	arr = new int*[N];
+	for (int i = 0; i < N; i++)
+	{
+		arr[i] = new int[3];
+	}
+}
+
+int main(void) {
+
+	int N, val;
+	scanf("%d", &N);
+
+
+	init(N);
+
+	for (int i = 0; i < N; i++)
+	{
+		scanf("%d", &val);
+		arr[i][0] = val;
+	}
+
+	initForward(N);
+	initBackWard(N);
+
+	int max = 0;
+
+	for (int i = 0; i < N; i++)
+	{
+		if (arr[i][1] + arr[i][2] > max)
+		{
+			max = arr[i][1] + arr[i][2];
+		}
+	}
+
+	printf("%d", max - 1);
+
+	return 0;
+}
+
+void initForward(int N)
+{
+	for (int i = 0; i < N; i++)
+	{
+		int max_count = 0;
+		for (int k = 0; k < i; k++)
+		{
+			if (arr[k][0] < arr[i][0])
+			{
+				if (arr[k][1] > max_count)
+				{
+					max_count = arr[k][1];
+				}
+			}
+		}
+		arr[i][1] = max_count + 1;
+	}
+}
+
+void initBackWard(int N)
+{
+	for (int i = N - 1; i >= 0; i--)
+	{
+		int max_count = 0;
+		for (int k = i + 1; k < N; k++)
+		{
+			if (arr[k][0] < arr[i][0])
+			{
+				if (arr[k][2] > max_count)
+				{
+					max_count = arr[k][2];
+				}
+			}
+		}
+		arr[i][2] = max_count + 1;
+	}
+}
+</code></pre>
+
+이번은 가장 길게 만들 수 있는 수열을 앞뒤로 붙이는 문제입니다.<br/>
+먼저 arr를 만들어서 0번은 현재의 값, 1번은 앞에서부터 자신을 포함하여 가장 길게 만들 수 있는 수열의 길이, 2번은 뒤에서부터 자신을 포함하여 가장 길게 만들 수 있는 수열의 길이로 계산합니다.<br/>
+1번과 2번을 붙이면 가장 길게 만들 수 있는 전체 수열의 길이가 되지만, 본인이 2번 중복되기 때문에 1을 빼주도록 합니다.<br/>
+해당 값으로 전체에서 가장 큰 값을 return해주도록 합니다.<br/>
+
+</p>
+

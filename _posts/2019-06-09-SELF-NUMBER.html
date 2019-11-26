@@ -1,0 +1,58 @@
+---
+title: 셀프 넘버
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/4673 <br/><br/>
+
+이번은 셀프 넘버를 찾는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+
+public class Main {
+
+    private static boolean[] retArray = new boolean[10001];
+
+    public static void main(String args[]) throws IOException {
+
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out));
+
+        for (int i = 1; i < 10001; i++) {
+            int index = getDn(i);
+            if (index < 10001) {
+                retArray[index] = true;
+            }
+        }
+
+        for (int i = 1; i < 10001; i++) {
+            if (!retArray[i]) {
+                writer.write(String.valueOf(i) + "\n");
+            }
+        }
+
+        writer.flush();
+        writer.close();
+
+    }
+
+    public static int getDn(int value) {
+
+        String strValue = String.valueOf(value);
+        int sum = value;
+        for (int i = 0; i < strValue.length(); i++) {
+            sum += Integer.parseInt(String.valueOf(strValue.charAt(i)));
+        }
+        return sum;
+    }
+}
+</code></pre>
+
+문제는 생성자가 없는 셀프 넘버를 찾는 문제이지만, 하나하나 대입하면 연산속도가 느리므로 셀프 넘버가 아닌 수를 모두 체크하는 방식으로 연산합니다.<br/>
+최초 1부터 10000까지 d(n)연산으로 나오는 값을 모두 체크하여, 체크되지 않은 수를 출력하도록 합니다.<br/>
+빠른 출력을 위해 BufferedWriter를 사용합니다.<br/>
+</p>
+

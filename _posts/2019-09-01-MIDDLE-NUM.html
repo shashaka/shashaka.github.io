@@ -1,0 +1,185 @@
+---
+title: 가운데를 말해요  
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1655 <br/><br/>
+
+이번은 우선순위 큐를 응용하여 중앙값을 빠르게 찾는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+static int minHeap[100001] = {};
+static int maxHeap[100001] = {};
+static int minHeapSize = 0;
+static int maxHeapSize = 0;
+static int middleNum = 100001;
+
+void add(int val);
+
+int main(void) {
+
+	int N, val;
+
+	scanf("%d", &N);
+
+	for (int i = 0; i < N; i++)
+	{
+		scanf("%d", &val);
+		add(val);
+
+		printf("%d\n", middleNum);
+	}
+
+	return 0;
+}
+
+void addMaxHeap(int val) {
+
+	maxHeap[maxHeapSize] = val;
+
+	int idx = maxHeapSize;
+	while (true)
+	{
+		if (maxHeap[(idx - 1) / 2] < maxHeap[idx]) {
+			int temp = maxHeap[(idx - 1) / 2];
+			maxHeap[(idx - 1) / 2] = maxHeap[idx];
+			maxHeap[idx] = temp;
+			idx = (idx - 1) / 2;
+		}
+		else {
+			break;
+		}
+	}
+
+	maxHeapSize++;
+}
+
+void addMinHeap(int val) {
+	minHeap[minHeapSize] = val;
+
+	int idx = minHeapSize;
+	while (true)
+	{
+		if (minHeap[(idx - 1) / 2] > minHeap[idx]) {
+			int temp = minHeap[(idx - 1) / 2];
+			minHeap[(idx - 1) / 2] = minHeap[idx];
+			minHeap[idx] = temp;
+			idx = (idx - 1) / 2;
+		}
+		else {
+			break;
+		}
+	}
+	minHeapSize++;
+}
+
+int removeMaxHeap() {
+	int val = maxHeap[0];
+	maxHeap[0] = maxHeap[maxHeapSize - 1];
+	maxHeapSize--;
+
+	int idx = 0;
+	while (true)
+	{
+		int maxidx = idx;
+		int max = maxHeap[idx];
+		if ((2 * idx + 1) < maxHeapSize && maxHeap[2 * idx + 1] > max)
+		{
+			maxidx = 2 * idx + 1;
+			max = maxHeap[2 * idx + 1];
+		}
+
+		if ((2 * idx + 2) < maxHeapSize && maxHeap[2 * idx + 2] > max)
+		{
+			maxidx = 2 * idx + 2;
+			max = maxHeap[2 * idx + 2];
+		}
+
+		if (idx == maxidx)
+		{
+			break;
+		}
+
+		int temp = maxHeap[idx];
+		maxHeap[idx] = maxHeap[maxidx];
+		maxHeap[maxidx] = temp;
+		idx = maxidx;
+	}
+
+	return val;
+}
+
+int removeMinHeap() {
+	int val = minHeap[0];
+	minHeap[0] = minHeap[minHeapSize - 1];
+	minHeapSize--;
+
+	int idx = 0;
+	while (true)
+	{
+		int minidx = idx;
+		int min = minHeap[idx];
+		if ((2 * idx + 1) < minHeapSize && minHeap[2 * idx + 1] < min)
+		{
+			minidx = 2 * idx + 1;
+			min = minHeap[2 * idx + 1];
+		}
+
+		if ((2 * idx + 2) < minHeapSize && minHeap[2 * idx + 2] < min)
+		{
+			minidx = 2 * idx + 2;
+			min = minHeap[2 * idx + 2];
+		}
+
+		if (idx == minidx)
+		{
+			break;
+		}
+
+		int temp = minHeap[idx];
+		minHeap[idx] = minHeap[minidx];
+		minHeap[minidx] = temp;
+		idx = minidx;
+
+	}
+
+	return val;
+}
+
+void add(int val) {
+	if (val < middleNum)
+	{
+		addMaxHeap(val);
+	}
+	else {
+		addMinHeap(val);
+	}
+
+
+	while (maxHeapSize > minHeapSize)
+	{
+		addMinHeap(removeMaxHeap());
+	}
+
+	while (maxHeapSize < minHeapSize)
+	{
+		addMaxHeap(removeMinHeap());
+	}
+
+	middleNum = maxHeap[0];
+}
+
+</code></pre>
+
+최대 힙과 최소 힙을 응용하는 문제를 풀어보도록 하겠습니다.<br/>
+최대 힙과 최소힙의 사이즈를 서로 맞추고, 최소 힙의 모든 값은 최대 힙의 최대값보다 크게 하면 무조건 최대 힙의 최대값은 중간 값이 되게 됩니다.<br/>
+따라서, 처음에 값을 받으면 현재 중간값보다 크면 최소 힙, 작으면 최대 힙에 넣어주고,<br/>
+최대 힙이 최소 힙보다 1 이상 크면 최대 힙에서 최대값을 빼서 최소 힙에 넣어주고,<br/>
+최소 힙이 최대 힙보다 크면 최소 힙의 최소 값을 빼서 최대 힙에 넣어주도록 합니다.<br/>
+매번 위의 logic을 반복하여, 최대 힙의 최대값을 출력해주도록 합니다.<br/>
+<br/>
+</p>
+

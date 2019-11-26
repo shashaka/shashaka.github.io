@@ -1,0 +1,59 @@
+---
+title: 01타일 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1904 <br/><br/>
+
+이번은 점화식의 값을 특정 상수로 나눈 나머지를 구하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+int getMaxCount(int n);
+
+static int* cache = new int[1000001];
+
+int main(void) {
+
+
+	for (int i = 0; i < 1000001; i++)
+	{
+		cache[i] = 0;
+	}
+
+	int N;
+	scanf("%d", &N);
+
+	cache[0] = 0;
+	cache[1] = 1;
+	cache[2] = 2;
+
+	long ret = getMaxCount(N);
+
+	printf("%d\n", ret);
+
+	return 0;
+}
+
+int getMaxCount(int n)
+{
+	if (cache[n] == 0)
+	{
+		int ret = getMaxCount(n - 1) + getMaxCount(n - 2);
+		cache[n] = ret % 15746;
+	}
+	return cache[n];
+}
+</code></pre>
+
+먼저 문제의 조건을 보도록 하겠습니다.<br/>
+문제에서 사용할 수 있는 타일은 00과 1 이렇게 두가지입니다.<br/>
+만약에 특정 길이의 수열의 갯수를 찾으려고 하면, 그보다 2만큼 짧은 수열에 00을 더한 값과 1만큼 작은 수열에 1을 더해준 값과 같습니다.<br/>
+2보다 작은 수열에 11을 더하는 경우는 1만큼 작은 수열에 1을 더하고, 그 다음 또 1을 더한 것과 같기 때문에 중복되게 됩니다.<br/>
+따로서 f(n) = f(n-1) + f(n-2) 로 피보나치 수열과 같은 모양이 됩니다.<br/>
+f(0) = 0, f(1) = 1, f(2) = 2 로 선언해주고 위와 같은 피보나치 수열 모양으로 연산을 진행해주고 값을 return 해주도록 합니다.<br/>
+
+</p>
+

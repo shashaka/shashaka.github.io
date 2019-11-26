@@ -1,0 +1,48 @@
+---
+title: 2007년
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1924 <br/><br/>
+
+이번은 요일 계산 문제를 풀어보겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    public static int[] dates = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+    public static String[] days = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
+
+    public static void main(String args[]) {
+        Scanner scanner = new Scanner(System.in);
+        int month = scanner.nextInt();
+        int date = scanner.nextInt();
+
+        String ret = getDay(month, date);
+
+        System.out.println(ret);
+    }
+
+    private static String getDay(int month, int date) {
+
+        int totalDate = 0;
+
+        for (int i = 0; i < month - 1; i++) {
+            totalDate += dates[i];
+        }
+        totalDate += date;
+
+        return days[totalDate % 7];
+    }
+}
+</code></pre>
+
+먼저 각 월별로 몇일까지 있는지 배열로 저장하고, 요일별로 String 또한 배열로 저장합니다.<br/>
+1월 1일이 월요일이므로 8일은 월요일, 15일은 월요일이고 결국 7로 나누었을때 나머지가 1이면 월요일, 2이면 화요일로 되게 됩니다.<br/>
+따라서, 1월 1일부터 며칠이 지났는지 계산한 후 그 값을 7로 나누었을 때 값으로 요일을 추정할 수 있습니다.<br/>
+</p>
+

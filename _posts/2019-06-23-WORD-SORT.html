@@ -1,0 +1,103 @@
+---
+title: 단어 정렬  
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1181 <br/><br/>
+
+이번은 단어를 기준에 따라 정렬하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.io.*;
+import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String args[]) throws IOException {
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out));
+
+        int size = Integer.parseInt(reader.readLine());
+
+        String[] strArr = new String[size];
+
+        for (int i = 0; i < size; i++) {
+            String str = reader.readLine();
+            strArr[i] = str;
+        }
+
+        qSort(strArr, 0, strArr.length - 1);
+
+        String prev = null;
+        for (int i = 0; i < size; i++) {
+            if (!strArr[i].equals(prev)) {
+                writer.write(strArr[i] + "\n");
+                prev = strArr[i];
+            }
+        }
+
+        writer.flush();
+        writer.close();
+        reader.close();
+
+    }
+
+    private static void qSort(String[] arr, int start, int end) {
+        if (start < end) {
+
+            int partition = getPartition(arr, start, end);
+
+            qSort(arr, start, partition - 1);
+            qSort(arr, partition + 1, end);
+        }
+    }
+
+    private static int getPartition(String[] arr, int start, int end) {
+        String pivot = arr[end];
+        int i = start - 1;
+        for (int k = start; k < end; k++) {
+            if (isLowValue(arr[k], pivot)) {
+                i++;
+                String temp = arr[i];
+                arr[i] = arr[k];
+                arr[k] = temp;
+            }
+        }
+
+        String temp = arr[i + 1];
+        arr[i + 1] = arr[end];
+        arr[end] = temp;
+
+        return i + 1;
+    }
+
+    private static boolean isLowValue(String s, String pivot) {
+        
+        if (s.equals(pivot)) {
+            return false;
+        }
+        if (s.length() < pivot.length()) {
+            return true;
+        } else if (s.length() == pivot.length()) {
+            for (int i = 0; i < pivot.length(); i++) {
+                if (pivot.charAt(i) > s.charAt(i)) {
+                    return true;
+                } else if (pivot.charAt(i) < s.charAt(i)) {
+                    return false;
+                }
+            }
+        }
+
+        return false;
+    }
+}
+</code></pre>
+
+이번 문제는 quick sort를 이용해 풀어주도록 합니다.<br/>
+quick sort에서 정렬을 할 때 isLowValue 메서드를 만들어 같은 string일 경우는 false, 길이가 짧을 때는 true, 같은 길이일 때 알파벳순이 이전이면 true를 return해주도록 합니다.<br/>
+출력시에는 중복된 값의 경우에는 출력을 skip하도록 합니다.<br/>
+
+</p>
+

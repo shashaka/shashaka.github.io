@@ -1,0 +1,59 @@
+---
+title: ALTER TABLE
+layout: post
+categories: cassandra
+---
+
+<!-- Text stuff -->
+<p>
+기존 테이블을 변경할 때에는 ALTER TABLE 문이 사용됩니다. <br/>
+
+<pre><code>alter_table_statement   ::=  ALTER TABLE table_name alter_table_instruction
+alter_table_instruction ::=  ADD column_name cql_type ( ',' column_name cql_type )*
+                             | DROP column_name ( column_name )*
+                             | WITH options
+</code></pre>
+
+예를 들어 :<br/>
+<br/>
+<pre><code>ALTER TABLE addamsFamily ADD gravesite varchar;
+
+ALTER TABLE addamsFamily
+       WITH comment = 'A most excellent and useful table'
+       AND read_repair_chance = 0.2;
+</code></pre>
+
+ALTER TABLE 문은 다음을 수행 할 수 있습니다 :<br/>
+<br/>
+<h4>- 테이블에 새 열을 추가합니다 (ADD 명령을 통해).</h4><br/>
+명심해야 할 점은 테이블의 기본 키는 변경할 수 없으므로 새로 추가 된 열은 기본 키의 일부가 될 수 없습니다.<br/>
+또한 압축 테이블에는 열 추가에 대한 제한 사항이 있습니다.<br/>
+이것은 (클러스터에 포함 된 데이터의 양에서) 상수 시간 오퍼레이션임을 유의하십시오.<br/>
+<br/>
+<h4>- 테이블에서 열을 제거합니다.</h4><br/>
+이렇게하면 열과 모든 내용이 삭제되지만 열은 즉시 사용할 수 없게되는 반면, 실제 해당 data는 압축 중에 느리게 제거됩니다.<br/>
+지연 제거로 인해 변경 자체는 (클러스터에서 제거되거나 포함 된 데이터의 양에서) 상수 시간 오퍼레이션입니다.<br/>
+<br/>
+<h4>- WITH 옵션을 통해 일부 테이블 옵션을 변경합니다.</h4><br/>
+지원되는 옵션은 테이블을 만들 때와 동일합니다 (COMPACT STORAGE 및 CLUSTERING ORDER 는 생성 후 변경할 수 없음).<br/>
+압축 하위 옵션을 설정하면 모든 이전 압축 옵션을 지우는 효과가 있으므로 유지하려는 경우 모든 하위 옵션을 다시 지정해야합니다.<br/>
+동일한 주의 사항이 압축 하위 옵션 세트에도 적용됩니다.<br/>
+<br/>
+<pre><code>Warning
+
+열을 삭제하면 이 열의 값에 사용 된 timestamp가 마이크로 초 단위의 "실제" timestamp임을 전제로합니다.
+마이크로 초 단위로 "실제" timestamp을 사용하는 것이 기본값이며 강력하게 권장됩니다.
+그러나 Cassandra는 클라이언트가 임의의 테이블에 임의의 timestamp를 제공 할 수 있으므로 이론적으로 다른 규칙을 사용할 수 있습니다.
+하지만 그렇게하면 열을 삭제하는 것이 올바르게 작동하지 않을 수 있습니다.
+</code></pre>
+
+<pre><code>Warning
+
+열이 삭제되면 삭제 된 열의 유형이 고정되지 않은 열이 아닌 경우에만 삭제된 열과 동일한 이름의 열을 다시 추가 할 수 있습니다.
+</code></pre>
+
+<br/>
+출처 : http://cassandra.apache.org/doc/latest/cql/ddl.html  <br/>
+<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+</p>

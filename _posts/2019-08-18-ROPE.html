@@ -1,0 +1,114 @@
+---
+title: 로프   
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/2217 <br/><br/>
+
+이번은 그리디하게 최적값을 찾아내는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+void mergeSort(int arr[], int low, int high);
+
+int main(void) {
+
+	int N;
+
+	scanf("%d", &N);
+
+	int* arr = new int[N];
+
+	for (int i = 0; i < N; i++)
+	{
+		scanf("%d", &arr[i]);
+	}
+
+	mergeSort(arr, 0, N - 1);
+
+	int max = 0;
+	int count = 1;
+
+	for (int i = N - 1; i >= 0; i--)
+	{
+		if (count * arr[i] > max)
+		{
+			max = count * arr[i];
+			
+		}
+		count++;
+	}
+
+	printf("%d", max);
+
+	return 0;
+}
+void merge(int arr[], int l, int m, int r)
+{
+	int i, j, k;
+	int n1 = m - l + 1;
+	int n2 = r - m;
+
+	int* L = new int[n1];
+	int* R = new int[n2];
+
+	for (i = 0; i < n1; i++)
+		L[i] = arr[l + i];
+	for (j = 0; j < n2; j++)
+		R[j] = arr[m + 1 + j];
+
+	i = 0;
+	j = 0;
+	k = l;
+	while (i < n1 && j < n2)
+	{
+		if (L[i] <= R[j])
+		{
+			arr[k] = L[i];
+			i++;
+		}
+		else
+		{
+			arr[k] = R[j];
+			j++;
+		}
+		k++;
+	}
+
+
+	while (i < n1)
+	{
+		arr[k] = L[i];
+		i++;
+		k++;
+	}
+
+	while (j < n2)
+	{
+		arr[k] = R[j];
+		j++;
+		k++;
+	}
+}
+
+void mergeSort(int arr[], int l, int r)
+{
+	if (l < r)
+	{
+
+		int m = l + (r - l) / 2;
+
+		mergeSort(arr, l, m);
+		mergeSort(arr, m + 1, r);
+
+		merge(arr, l, m, r);
+	}
+}
+</code></pre>
+
+로프 N개가 버틸 수 있는 최대 하중은 N*(그 중에 가장 낮은 로프의 하중)이므로 전체를 sort해준 후, count*로프의 하중으로 계산해주면 됩니다.<br/>
+<br/>
+</p>
+

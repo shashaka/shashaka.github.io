@@ -1,0 +1,78 @@
+---
+title: CREATE KEYSPACE
+layout: post
+categories: cassandra
+---
+
+<!-- Text stuff -->
+<p>
+키 공간은 CREATE KEYSPACE 문을 사용하여 작성됩니다.
+</p>
+<pre><code>create_keyspace_statement ::=  CREATE KEYSPACE [ IF NOT EXISTS ] keyspace_name WITH options
+</code></pre>
+<p>
+예를 들어 :
+</p>
+<pre><code>CREATE KEYSPACE Excelsior
+           WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};
+
+CREATE KEYSPACE Excalibur
+           WITH replication = {'class': 'NetworkTopologyStrategy', 'DC1' : 1, 'DC2' : 3}
+            AND durable_writes = false;
+</code></pre>
+<p>
+지원되는 options은 다음과 같습니다 : 
+</p>
+
+	<div class="table-wrapper">
+		<table>
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>kind</th>
+					<th>mandatory</th>
+					<th>default</th>
+					<th>description</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>replication</td>
+					<td>map</td>
+					<td>yes</td>
+					<td></td>
+					<td>키 스페이스에 사용할 replication 전략 및 옵션</td>
+				</tr>
+				<tr>
+					<td>durable_writes</td>
+					<td>simple</td>
+					<td>no</td>
+					<td>true</td>
+					<td>이 키 스페이스의 업데이트에 커밋 로그를 사용할지 여부 (사용자의 책임하에 이 옵션을 비활성화할 수 있습니다!)</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	
+	<hr />
+
+<p>
+<br/>
+replication 속성은 필수이며 적어도 사용할 replication 전략 클래스를 정의하는 'class' 하위 옵션을 포함해야합니다.<br/>
+나머지 하위 옵션은 사용되는 replication 전략에 따라 다릅니다.<br/>
+기본적으로 Cassandra는 다음 '클래스'를 지원합니다. :<br/>
+<br/>
+- '<b>SimpleStrategy</b>': 전체 클러스터에 대한 replication 요소를 정의하는 간단한 전략입니다. 지원되는 유일한 하위 옵션은 replication factor를 정의하는 'replication_factor'이며 필수 항목입니다.<br/>
+<br/>
+- '<b>NetworkTopologyStrategy</b>': 각 데이터 센터마다 replication 요소를 독립적으로 설정할 수있는 전략입니다. 나머지 하위 옵션은 키 - 값 쌍이며 키는 데이터 센터 이름이고 값은 관련된 복제 요소입니다.<br/>
+<br/>
+
+IF NOT EXISTS 옵션을 사용하지 않으면 이미 존재하는 키 스페이스를 만들려고하면 오류가 반환됩니다.<br/>
+해당 옵션을 사용했을 때,키 스페이스가 이미 존재하면 명령문은 적용되지 않습니다.<br/>
+<br/>
+
+출처 : http://cassandra.apache.org/doc/latest/cql/ddl.html  
+
+
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+</p>

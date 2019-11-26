@@ -1,0 +1,144 @@
+---
+title: Materialized Views
+layout: post
+categories: cassandra
+---
+
+<!-- Text stuff -->
+<p>
+구체화 된 뷰 이름은 다음에 의해 정의됩니다. <br/>
+
+<pre><code>view_name ::=  re('[a-zA-Z_0-9]+')
+</code></pre>
+<br/>
+
+<h3>CREATE MATERIALIZED VIEW</h3>
+<br/>
+CREATE MATERIALIZED VIEW 문을 사용하여 테이블에 구체화 된 뷰를 작성할 수 있습니다.<br/>
+
+<pre><code>create_materialized_view_statement ::=  CREATE MATERIALIZED VIEW [ IF NOT EXISTS ] view_name AS
+                                            select_statement
+                                            PRIMARY KEY '(' primary_key ')'
+                                            WITH table_options
+</code></pre>
+
+예를 들어 : <br/>
+
+<pre><code>CREATE MATERIALIZED VIEW monkeySpecies_by_population AS
+    SELECT * FROM monkeySpecies
+    WHERE population IS NOT NULL AND species IS NOT NULL
+    PRIMARY KEY (population, species)
+    WITH comment='Allow query by population instead of species';
+</code></pre>
+
+CREATE MATERIALIZED VIEW 문은 새로운 구체화 된 뷰를 작성합니다.<br/>
+이러한 각 뷰는 SELECT 문에 지정된 기본 테이블 또는 기본 테이블에있는 행에 해당하는 행 집합입니다.<br/>
+구체화 된 뷰는 직접 업데이트 할 수 없지만 기본 테이블을 업데이트하면 해당 뷰가 업데이트됩니다.<br/>
+<br/>
+구체화 된 뷰를 작성하는 과정은 다음 세 부분으로 이루어집니다.<br/>
+<br/>
+- 뷰에 포함되는 데이터를 제한하는 select 문입니다.<br/>
+<br/>
+- 뷰의 primary_key 정의입니다.<br/>
+<br/>
+- 뷰를 위한 옵션<br/>
+<br/>
+IF NOT EXISTS 옵션을 사용하지 않으면 이미 존재하는 구체화 뷰를 작성하려고 하면 오류가 리턴됩니다.<br/>
+사용되는 경우, 구체화 된 뷰가 이미 존재하면 명령문은 동작하지 않습니다.<br/>
+<br/>
+
+<h3>MV select statement</h3>
+<br/>
+구체화 뷰 작성의 select 문은 어떤 기본 테이블이 뷰에 포함되는지 정의합니다.<br/>
+그 명령문은 몇가지 방법으로 제한되어 있습니다: <br/>
+<br/>
+- 그 선택은 기본 테이블의 열만 선택하는 선택으로 제한됩니다.<br/>
+다시 말해, 함수 (집계 또는 결합), 형변환, 용어 등을 사용할 수 없습니다.<br/>
+별칭도 지원되지 않습니다.<br/>
+그러나 *를 모든 열을 선택하는 shortcut으로 사용할 수 있습니다.<br/>
+또한 정적 컬럼은 구체화 된 뷰에 포함될 수 없습니다. (기본 테이블에 정적 컬럼이 있으면 SELECT *가 허용되지 않습니다.)<br/>
+<br/>
+- WHERE 절에는 다음과 같은 제한 사항이 있습니다 :<br/>
+* bind_marker를 포함 할 수 없습니다.<br/>
+* 기본 테이블 기본 키의 일부가 아닌 칼럼은 IS NOT NULL 조건으로만 제한될 수 있습니다. 다른 제한은 허용되지 않습니다.<br/>
+* 뷰 기본 키의 일부인 칼럼은 NULL이 될 수 없으므로 적어도 IS NOT NULL 제한 (또는 다른 제한은 없지만 값이 있어야 함)에 의해 최소한 제한되어야합니다.<br/>
+<br/>
+- ordering 절이나 limit 을 가질 수 없으며 FILTERING을 허용 할 수도 없습니다.<br/>
+<br/>
+
+<h3>MV primary key</h3>
+<br/>
+뷰에는 primary_key가 있어야하며 primary_key는 다음 제한 사항을 준수해야합니다 :<br/>
+<br/>
+- 기본 테이블의 모든 primary_key 컬럼 세트를 포함해야합니다.<br/>
+이렇게하면 뷰의 모든 행이 기본 테이블의 정확히 한 행에 해당합니다.<br/>
+<br/>
+- 기본 테이블의 기본 키 컬럼이 아닌 경우, 단일 컬럼만 포함 할 수 있습니다.<br/>
+<br/>
+<br/>
+예를 들어, 다음 기본 테이블 정의를 보면 :<br/>
+
+<pre><code>CREATE TABLE t (
+    k int,
+    c1 int,
+    c2 int,
+    v1 int,
+    v2 int,
+    PRIMARY KEY (k, c1, c2)
+)
+</code></pre>
+
+다음 뷰 정의가 허용됩니다 :<br/>
+
+<pre><code>CREATE MATERIALIZED VIEW mv1 AS
+    SELECT * FROM t WHERE k IS NOT NULL AND c1 IS NOT NULL AND c2 IS NOT NULL
+    PRIMARY KEY (c1, k, c2)
+
+CREATE MATERIALIZED VIEW mv1 AS
+    SELECT * FROM t WHERE k IS NOT NULL AND c1 IS NOT NULL AND c2 IS NOT NULL
+    PRIMARY KEY (v1, k, c1, c2)
+</code></pre>
+
+하지만 다음은 허용되지 않습니다 :<br/>
+
+<pre><code>// Error: cannot include both v1 and v2 in the primary key as both are not in the base table primary key
+CREATE MATERIALIZED VIEW mv1 AS
+    SELECT * FROM t WHERE k IS NOT NULL AND c1 IS NOT NULL AND c2 IS NOT NULL AND v1 IS NOT NULL
+    PRIMARY KEY (v1, v2, k, c1, c2)
+
+// Error: must include k in the primary as it's a base table primary key column
+CREATE MATERIALIZED VIEW mv1 AS
+    SELECT * FROM t WHERE c1 IS NOT NULL AND c2 IS NOT NULL
+    PRIMARY KEY (c1, c2)
+</code></pre>
+<br/>
+
+<h3>MV options</h3>
+<br/>
+구체화 된 뷰는 내부적으로 테이블에 의해 구현되므로 MV를 작성하면 테이블을 작성하는 것과 동일한 옵션을 사용할 수 있습니다.<br/>
+<br/>
+
+<h3>ALTER MATERIALIZED VIEW</h3>
+<br/>
+작성한 후에는 ALTER MATERIALIZED VIEW 문을 사용하여 구체화 된 뷰의 옵션을 변경할 수 있습니다.<br/>
+<br/>
+<pre><code>alter_materialized_view_statement ::=  ALTER MATERIALIZED VIEW view_name WITH table_options
+</code></pre>
+
+업데이트 할 수있는 옵션은 작성시와 동일하므로, 따라서 테이블과 동일합니다.<br/>
+
+
+<h3>DROP MATERIALIZED VIEW</h3>
+
+구체화 된 뷰를 삭제할 때에는 DROP MATERIALIZED VIEW 문이 사용됩니다.<br/>
+
+<pre><code>drop_materialized_view_statement ::=  DROP MATERIALIZED VIEW [ IF EXISTS ] view_name;
+</code></pre>
+
+구체화 된 뷰가 존재하지 않으면, IF EXISTS가 사용되는 경우가 아니라면 명령문은 오류를 리턴합니다.<br/>
+사용되는 경우 아무런 동작을 하지않습니다.<br/>
+<br/>
+출처 : http://cassandra.apache.org/doc/latest/cql/mvs.html<br/>
+<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+</p>

@@ -1,0 +1,28 @@
+---
+title: 입력 그대로 출력
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/11718 <br/><br/>
+
+이번은 입력을 그대로 출력하는 문제를 풀어보겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+    public static void main(String args[]) {
+        Scanner scanner = new Scanner(System.in);
+        while (scanner.hasNextLine()) {
+            String output = scanner.nextLine();
+            System.out.println(output);
+        }
+    }
+}
+</code></pre>
+
+java의 scanner를 통해 system 입력을 받고 hasNextLine 메서드를 통해 다음 줄이 존재하는지 체크합니다. <br/>
+다음 줄이 존재하면 해당 줄을 읽고 println 메서드를 통해서 그대로 출력해주도록 합니다. <br/>
+</p>
+

@@ -1,0 +1,55 @@
+---
+title: 더하기 사이클
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1110 <br/><br/>
+
+이번은 더하기 사이클을 연산하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String args[]) {
+
+        Scanner scanner = new Scanner(System.in);
+
+        int firstValue = scanner.nextInt();
+        int front = firstValue / 10;
+        int tail = firstValue % 10;
+
+        int targetFront = front;
+        int targetTail = tail;
+
+        int ret = 0;
+
+        while (true) {
+
+            int tempTail = getTail(front, tail);
+            front = tail;
+            tail = tempTail;
+            ret++;
+
+            if (front == targetFront && tail == targetTail) {
+                break;
+            }
+        }
+
+        System.out.println(ret);
+    }
+
+    private static int getTail(int front, int tail) {
+        int value = front + tail;
+        return value % 10;
+    }
+}
+</code></pre>
+
+최초의 값을 받아 두자리인 경우 나누어서 몫은 첫번째 숫자, 나머지는 두번째 숫자로 설정해둡니다.<br/>
+문제에 나오는 규칙대로 두 값을 더하여 10으로 나눈 나머지는 다시 두번째 숫자, 기존에 두번째 숫자였던 값은 첫번째 숫자로 변경해줍니다.<br/>
+해당 메서드를 반복한 값을 저장하여 출력해줍니다.<br/>
+</p>
+

@@ -1,0 +1,38 @@
+---
+title: 별찍기 -2
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/2439 <br/><br/>
+
+이번은 오른쪽 정렬 출력 문제를 풀어보겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String args[]) {
+        Scanner scanner = new Scanner(System.in);
+        int value = scanner.nextInt();
+
+        for (int i = 1; i <= value; i++) {
+            for (int k = value; k > 0; k--) {
+                if (i >= k) {
+                    System.out.print("*");
+                } else {
+                    System.out.print(" ");
+                }
+            }
+            System.out.println();
+        }
+    }
+}
+</code></pre>
+
+java의 scanner를 통해 system 입력을 받고 해당 값을 value로 저장합니다.<br/>
+첫째줄에는 5번째, 두번째줄에는 4,5번째에 별이 찍히고 그 전에는 공백이 찍혀야하므로 i는 1~value까지 k는 value부터 1까지 for문을 돌리게 됩니다.<br/>
+i가 1인 경우에는 5,4,3,2,1 형식으로 줄어드는 k에서 5번째에 별이 찍히고, i가 2인 경우에는 2,1인 4,5번째에 별이 찍히게 됩니다.<br/>
+</p>
+

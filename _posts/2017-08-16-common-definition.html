@@ -1,0 +1,40 @@
+---
+title: Common definitions
+layout: post
+categories: cassandra
+---
+
+<!-- Text stuff -->
+<p>키 스페이스와 테이블의 이름은 다음과 같은 문법으로 정의됩니다.</p>
+
+<pre><code>keyspace_name ::=  name
+table_name    ::=  [ keyspace_name '.' ] name
+name          ::=  unquoted_name | quoted_name
+unquoted_name ::=  re('[a-zA-Z_0-9]{1, 48}')
+quoted_name   ::=  '"' unquoted_name '"'</code></pre>
+
+<p>
+키 스페이스와과테이블 이름은 알파벳과 숫자로만 구성되어야하며 비어서는 안되며 48 자로 제한됩니다 <br/>
+(이 제한은 주로 파일 이름 (키 스페이스와 테이블 이름을 포함 할 수 있음)이 특정 시스템의 제한을 초과하지 않도록하기 위해 존재합니다).<br/>
+기본적으로 키 공간과 테이블 이름은 대소 문자를 구분하지 않습니다 (myTable은 mytable과 동일). <br/>
+하지만 큰 따옴표( "myTable"은 mytable과 다릅니다)를 사용하여 대소 문자를 구분할 수 있습니다.<br/>
+<br/>
+또한 테이블은 항상 키 공간의 일부이며 테이블 이름은 해당 키 공간의 일부로 정규화되어 제공 될 수 있습니다. <br/>
+만약 정규화되지 않은 경우 테이블은 현재의 키 공간에 있다고 가정합니다.<br/>
+<br/>
+또한 column의 유효한 이름은 다음과 같이 간단하게 정의됩니다.<br/>
+</p>
+
+<pre><code>column_name ::=  identifier
+</code></pre>
+
+<p>또한 다음 절에서 사용할 명령문 options의 개념을 정의합니다.   </p>
+
+<code>options ::=  option ( AND option )*
+option  ::=  identifier '=' ( identifier | constant | map_literal )
+</code>
+
+</p>출처 : http://cassandra.apache.org/doc/latest/cql/ddl.html  </p>
+
+
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>

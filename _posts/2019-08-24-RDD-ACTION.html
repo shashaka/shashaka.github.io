@@ -1,0 +1,70 @@
+---
+title: RDD Operations - Actions
+layout: post
+categories: spark
+---
+
+<p>
+다음 표는 Spark에서 지원하는 몇 가지 일반적인 작업을 보여줍니다. <br/>
+RDD API 문서 (Scala, Java, Python, R)를 참조하십시오.<br/>
+자세한 내용은 RDD 함수 doc (Scala, Java)을 참조하십시오.<br/>
+<br/>
+* reduce(func)<br/>
+함수 func 두 개의 인수를 사용하여 하나를 반환)를 사용하여 데이터 집합의 요소를 집계합니다. <br/>
+함수는 병렬로 올바르게 계산될 수 있도록 정류적이고 연관성이 있어야합니다.<br/>
+<br/>
+* collect()<br/>
+데이터 세트의 모든 요소를 ​​드라이버 프로그램에 배열로 반환합니다. <br/>
+이것은 일반적으로 데이터의 작은 하위 집합을 반환하는 필터 또는 다른 작업 후에 유용합니다.<br/>
+<br/>
+* count()<br/>
+데이터 세트의 전체 요소의 갯수를 반환합니다.<br/>
+<br/>
+* first()<br/>
+데이터 세트의 가장 처음 요소를 반환합니다.<br/>
+take(1) 메서드 호출과 비슷한 기능입니다.<br/>
+<br/>
+* take(n)<br/>
+데이터 세트의 처음 n개 요소가있는 배열을 반환합니다.<br/>
+<br/>
+* takeSample(withReplacement, num, [seed])<br/>
+교체를 포함하거나 포함하지 않고 데이터 세트에서 지정한 갯수의 요소를 임의로 뽑아 배열로 반환합니다.<br/>
+선택적으로 난수생성기의 갯수를 지정할 수 있습니다.<br/>
+<br/>
+* takeOrdered(n, [ordering])<br/>
+기존 순서 또는 명시된 순서대로 정렬된 상태에서 RDD의 처음 n개 요소를 리턴합니다.<br/>
+<br/>
+* saveAsTextFile(path)<br/>
+로컬 파일 시스템, HDFS 또는 기타 Hadoop 지원 파일 시스템의 지정된 디렉토리에 데이터 세트의 요소를 텍스트 파일 (또는 텍스트 파일 세트)로 작성합니다.<br/>
+Spark는 각 요소에 대해 toString을 호출하여 파일의 텍스트로 변환합니다.<br/>
+<br/>
+* saveAsSequenceFile(path) <br/>
+(Java and Scala)<br/>
+로컬 파일 시스템, HDFS 또는 기타 Hadoop 지원 파일 시스템의 지정된 경로에 데이터 세트의 요소를 Hadoop SequenceFile로 작성합니다.<br/>
+이것은 Hadoop의 쓰기 가능 인터페이스를 구현하는 키-값 쌍의 RDD에서도 사용 가능합니다.<br/>
+스칼라에서는 암시적으로 쓰기 가능으로 변환 가능한 유형 (Spark에는 Int, Double, String 등의 기본 유형에 대한 변환이 포함됨)에서도 사용할 수 있습니다.<br/>
+<br/>
+* saveAsObjectFile(path) <br/>
+(Java and Scala)<br/>
+Java 직렬화를 사용하여 데이터 세트의 요소를 간단한 형식으로 작성한 다음 SparkContext.objectFile()을 사용하여 로드 할 수 있습니다.<br/>
+<br/>
+* countByKey()<br/>
+RDD 유형 (K, V)에서만 사용할 수 있습니다. <br/>
+각 키의 개수와 (K, Int)쌍의 해시 맵을 반환합니다.<br/>
+<br/>
+* foreach(func)<br/>
+데이터 세트의 각 요소에서 함수 func를 실행합니다.<br/>
+이것은 일반적으로 Accumulator 업데이트 또는 외부 스토리지 시스템과의 상호 작용과 같은 부작용에 대처하기 위해 수행됩니다.<br/>
+NOTE: foreach() 외부에 대해서 Accumulator 이외의 변수를 수정하면 정의되지 않은 동작이 발생할 수 있습니다. 자세한 내용은 Understanding closures를 참조하십시오.<br/>
+<br/>
+Spark RDD API는 foreach에 대해서 foreachAsync와 같은 일부 작업의 비동기 버전도 제공합니다.<br/>
+이 기능은 action이 모두 수행될 때까지 기다리는 것 대신에 FutureAction을 다음 호출자에게 반환합니다.<br/>
+이는 Action의 비동기 실행을 관리하거나 대기하는 데 사용될 수 있습니다.<br/>
+<br/>
+참조 : https://spark.apache.org/docs/2.1.1/programming-guide.html#actions<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+
+
+
+</p>
+

@@ -1,0 +1,64 @@
+---
+title: Spring Swagger 설정
+layout: post
+categories: springboot
+---
+
+<p>
+API backEnd server에서 만든 API를 문서화 시켜주는 Swagger를 설정해보도록 합니다. <br/>
+다양한 Swagger의 integration tool이 있는데, 이번 예제에서는 spring fox를 사용해보도록 하겠습니다.<br/>
+<br/>
+기본적으로 springfox에서는 서버에 설정되어 있는 controller의 request와 response를 파싱하고,<br/>
+해당 모델들을 json 형식으로 만들어 GET /v2/api-docs 를 호출하게 되면 응답으로 내려주게 됩니다.<br/>
+<br/>
+이에 더해 spring fox에서는 swagger-ui 역시 내장시킬 수 있습니다.<br/>
+swagger-ui는 GET /v2/api-docs API를 통해 받은 응답을 사용자가 보기 편한 웹사이트 형식으로 변경해주는 역할을 합니다.<br/>
+<br/>
+먼저 아래와 같이 EnableSwagger2 어노테이션을 설정함으로써 해당 /v2/api-docs를 enable 시킬 수 있습니다.<br/>
+
+<pre><code>package org.blog.test.config;
+
+import com.fasterxml.classmate.TypeResolver;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+
+@Configuration
+@EnableSwagger2
+public class SwaggerConfig {
+
+    @Autowired
+    private TypeResolver typeResolver;
+
+    @Bean
+    public Docket swaggerApi() {
+        return new Docket(DocumentationType.SWAGGER_2)
+                .select()
+                .apis(RequestHandlerSelectors.any())
+                .paths(PathSelectors.regex("/health/*"))
+                .build();
+    }
+}
+</code></pre>
+
+또한 아래와 같이 springfox-swagger-ui를 dependency로 설정함으로써, 자체 서버 내장 swagger-ui를 사용할 수 있습니다.<br/>
+
+<pre><code>compile group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.7.0'
+</code></pre>
+
+- 실행 결과<br/>
+<br/>
+
+<p><span class="image left"><img src="{{ 'assets/images/swagger_ui.png' | relative_url }}" alt="" /></span></p>
+
+
+<br/>
+전체 예제는 아래 링크에서 다운로드 받을 수 있습니다.<br/>
+<br/>
+https://gitlab.com/shashaka/spring-swagger-project </p>

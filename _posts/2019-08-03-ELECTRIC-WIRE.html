@@ -1,0 +1,78 @@
+---
+title: 전깃줄 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/2565 <br/><br/>
+
+이번은 LIS 응용 문제 2를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+static int** arr;
+
+void init(int N) {
+	arr = new int*[N];
+	for (int i = 0; i < N; i++)
+	{
+		arr[i] = new int[3];
+		arr[i][0] = 0;
+	}
+}
+
+int main(void) {
+
+	int N, num, val;
+	scanf("%d", &N);
+
+	init(501);
+
+	for (int i = 0; i < N; i++)
+	{
+		scanf("%d", &num);
+		scanf("%d", &val);
+		arr[num][0] = num;
+		arr[num][1] = val;
+		arr[num][2] = 0;
+	}
+
+	int maxVal = 0;
+
+	for (int i = 1; i < 501; i++)
+	{
+		if (arr[i][0] != 0)
+		{
+			int max = 0;
+			for (int k = 1; k < i; k++) {
+				if (arr[k][0] < arr[i][0] && arr[k][1] < arr[i][1])
+				{
+					if (arr[k][2] > max)
+					{
+						max = arr[k][2];
+					}
+				}
+			}
+			arr[i][2] = max + 1;
+			if (arr[i][2] > maxVal)
+			{
+				maxVal = arr[i][2];
+			}
+		}
+	}
+
+	printf("%d\n", N - maxVal);
+
+	return 0;
+}
+</code></pre>
+
+문제에서는 전봇대의 위치 번호가 차례대로 주어진다고 써있지만, 예제만 보아도 순서가 보장이 안된다는 걸 확인할 수 있습니다.<br/>
+전체 값의 갯수는 100개, 전체 값의 범위는 500이므로 arr를 500까지 입력 가능하게 선언해줍니다.<br/>
+첫번째 전봇대 기준으로 첫번째 전봇대 번호, 두번째 전봇대 번호, 해당 전봇대보다 작은 번호 쌍을 가진 전봇대 번호의 갯수로 arr[i][0],arr[i][1],arr[i][2]로 넣어주게 됩니다.<br/>
+먼저 모든 입력값을 넣어주고, 1부터 차례대로 현재의 전봇대 값 쌍보다 작은 값 중에서 본인보다 작은 전봇대 갯수가 가장 큰 갯수를 가진 전봇대의 값을 찾고 해당값보다 1 큰 값으로 적용해줍니다.<br/>
+문제에서는 제외하여야 할 전선의 갯수를 찾는 문제이므로, 전체 쌍 갯수에서 가장 큰 쌍 갯수를 가진 값을 빼서 return해주도록 합니다.<br/>
+
+</p>
+

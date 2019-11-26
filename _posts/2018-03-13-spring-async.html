@@ -1,0 +1,64 @@
+---
+title: Spring Async 설정
+layout: post
+categories: springboot
+---
+
+<p>
+Spring에서 method를 Async로 실행시키기 위해서, SpringTaskExecutor 설정을 이용할 수 있습니다.<br/>
+<br/>
+아래와 같이 간단히 bean으로 taskExecutor를 설정하고, @EnableAsync를 설정하면 간단히 async executor 설정이 이루어집니다.<br/>
+
+<pre><code>package org.blog.test.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+@Configuration
+@EnableAsync
+public class AsyncConfig {
+
+    @Bean
+    public ThreadPoolTaskExecutor asyncTaskExecutor() {
+        return new ThreadPoolTaskExecutor() {{
+            setCorePoolSize(5);
+            setMaxPoolSize(20);
+            setQueueCapacity(200);
+            setThreadNamePrefix("AsyncExecutor_");
+        }};
+    }
+}
+</code></pre>
+
+다음으로 해당 method에 @Async를 설정해주면 됩니다.<br/>
+아래와 같이 class에 설정해주면, 해당 class의 모든 method가 Async가 적용이 되고, method 위에 설정하면 해당 method만 async로 동작하게 됩니다.<br/>
+<br/>
+<pre><code>package org.blog.test.service.impl;
+
+import lombok.extern.slf4j.Slf4j;
+import org.blog.test.service.AsyncService;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+@Async
+@Slf4j
+@Service
+public class AsyncServiceImpl implements AsyncService {
+
+    @Override
+    public void doAsync() {
+        log.info("async method");
+    }
+}
+</code></pre>
+
+- 실행 결과<br/>
+
+<pre><code>2017-06-19 23:02:44.626  INFO 8336 --- [AsyncExecutor_1] o.b.test.service.impl.AsyncServiceImpl   : async method
+</code></pre>
+
+전체 예제는 아래 링크에서 다운로드 받을 수 있습니다.<br/>
+<br/>
+https://gitlab.com/shashaka/async-executor-project </p>

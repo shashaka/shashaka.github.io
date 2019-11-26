@@ -1,0 +1,121 @@
+---
+title: 회의실배정 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1931 <br/><br/>
+
+이번은 가능한 한 많은 구간을 선택하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+struct Meeting
+{
+	int start, end;
+};
+
+static Meeting* arr;
+
+void mergeSort(Meeting arr[], int l, int r);
+
+int main(void) {
+
+	int N;
+
+	scanf("%d", &N);
+
+	arr = new Meeting[N];
+
+	for (int i = 0; i < N; i++)
+	{
+		scanf("%d %d", &arr[i].start, &arr[i].end);
+	}
+
+	mergeSort(arr, 0, N - 1);
+
+	int count = 0;
+	int now = 0;
+	for (int i = 0; i < N; i++)
+	{
+		if (arr[i].start >= now)
+		{
+			now = arr[i].end;
+			count++;
+		}
+	}
+
+	printf("%d", count);
+
+	return 0;
+}
+void merge(Meeting arr[], int l, int m, int r)
+{
+	int i, j, k;
+	int n1 = m - l + 1;
+	int n2 = r - m;
+
+	Meeting* L = new Meeting[n1];
+	Meeting* R = new Meeting[n2];
+
+	for (i = 0; i < n1; i++)
+		L[i] = arr[l + i];
+	for (j = 0; j < n2; j++)
+		R[j] = arr[m + 1 + j];
+
+	i = 0;
+	j = 0;
+	k = l;
+
+	while (i < n1 && j < n2)
+	{
+		if ((L[i].end < R[j].end) || (L[i].end == R[j].end && L[i].start < R[j].start))
+		{
+			arr[k] = L[i];
+			i++;
+		}
+		else
+		{
+			arr[k] = R[j];
+			j++;
+		}
+		k++;
+	}
+
+	while (i < n1)
+	{
+		arr[k] = L[i];
+		i++;
+		k++;
+	}
+
+	while (j < n2)
+	{
+		arr[k] = R[j];
+		j++;
+		k++;
+	}
+}
+
+void mergeSort(Meeting arr[], int l, int r)
+{
+	if (l < r)
+	{
+		int m = l + (r - l) / 2;
+
+		mergeSort(arr, l, m);
+		mergeSort(arr, m + 1, r);
+
+		merge(arr, l, m, r);
+	}
+}
+</code></pre>
+
+문제에서 회의 시간을 가장 많이 겹치지 않게 하는 수를 찾는다고 하였으므로, 각각의 회의시간이 가장 작으면서 빨리 끝나면 됩니다.<br/>
+전체를 회의시간이 끝나는 시간으로 정렬해준 다음, 같은 끝나는 시간인 경우는 빠르게 시작하는 순으로 정렬해줍니다.<br/>
+정렬한 전체 array를 순회하며 끝나는 시간과 시작하는 시간이 매칭되는 값을 찾아줍니다.<br/>
+
+<br/>
+</p>
+

@@ -1,0 +1,69 @@
+---
+title: 덩치     
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/7568 <br/><br/>
+
+이번은 모든 사람을 비교하여 덩치 등수를 구하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String args[]) {
+
+        Scanner sc = new Scanner(System.in);
+
+        int size = sc.nextInt();
+        Node[] nodes = new Node[size];
+        int[] ranks = new int[size];
+
+        for (int i = 0; i < size; i++) {
+            nodes[i] = new Node(sc.nextInt(), sc.nextInt());
+        }
+
+        for (int i = 0; i < size; i++) {
+            ranks[i]++;
+            for (int k = 0; k < size; k++) {
+                if (nodes[i].weight < nodes[k].weight && nodes[i].height < nodes[k].height) {
+                    ranks[i]++;
+                }
+            }
+        }
+
+        for (int i = 0; i < size; i++) {
+            System.out.print(ranks[i] + " ");
+        }
+
+    }
+}
+
+class Node {
+
+    int weight;
+    int height;
+
+    Node(int weight, int height) {
+        this.weight = weight;
+        this.height = height;
+    }
+
+    @Override
+    public String toString() {
+        return "Node{" +
+                "weight=" + weight +
+                ", height=" + height +
+                '}';
+    }
+}
+</code></pre>
+
+이번은 모든 수를 대입하는 방식인 브루트포스를 이용해 문제를 풀어보도록 하겠습니다.<br/>
+각각의 덩치를 비교해서 해당 값보다 덩치가 큰 값이 있으면 해당 값에 rank를 더하는 방식으로 진행합니다.<br/>
+두개의 for문을 이용해서, 간단히 문제를 풀 수 있습니다.<br/>
+
+</p>
+

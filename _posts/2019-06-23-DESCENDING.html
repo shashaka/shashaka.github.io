@@ -1,0 +1,69 @@
+---
+title: 소트인사이드  
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1427 <br/><br/>
+
+이번은 내림차순으로 정렬하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String args[]) {
+
+        Scanner sc = new Scanner(System.in);
+
+        String value = sc.next();
+
+        int[] strArr = new int[value.length()];
+        for (int i = 0; i < strArr.length; i++) {
+            strArr[i] = Integer.parseInt(String.valueOf(value.charAt(i)));
+        }
+
+        qSort(strArr, 0, strArr.length - 1);
+
+        for (int i = strArr.length - 1; i >= 0; i--) {
+            System.out.print(strArr[i]);
+        }
+    }
+
+    private static void qSort(int[] arr, int start, int end) {
+        if (start < end) {
+
+            int partition = getPartition(arr, start, end);
+
+            qSort(arr, start, partition - 1);
+            qSort(arr, partition + 1, end);
+        }
+    }
+
+    private static int getPartition(int[] arr, int start, int end) {
+        int pivot = arr[end];
+        int i = start - 1;
+        for (int k = start; k < end; k++) {
+            if (arr[k] < pivot) {
+                i++;
+                int temp = arr[i];
+                arr[i] = arr[k];
+                arr[k] = temp;
+            }
+        }
+
+        int temp = arr[i + 1];
+        arr[i + 1] = arr[end];
+        arr[end] = temp;
+
+        return i + 1;
+    }
+}
+
+</code></pre>
+
+이번 문제에서는 quick sort를 이용해 받은 string을 정렬한 이후, 뒤에서부터 출력해주도록 합니다.<br/>
+
+</p>
+

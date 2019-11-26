@@ -1,0 +1,70 @@
+---
+title: 파도반 수열 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/9461 <br/><br/>
+
+이번은 피보나치 수와 비슷한 규칙을 찾아 동적 계획법으로 푸는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+long long getRet(int val);
+
+static long long* waveArr = new long long[101];
+
+int main(void) {
+
+	int N;
+	scanf("%d", &N);
+
+	for (int i = 0; i < 101; i++)
+	{
+		waveArr[i] = 0;
+	}
+	waveArr[1] = waveArr[2] = waveArr[3] = 1;
+	waveArr[4] = waveArr[5] = 2;
+
+	for (int i = 0; i < N; i++)
+	{
+		int val;
+		scanf("%d", &val);
+		printf("%llu\n", getRet(val));
+	}
+
+	return 0;
+}
+
+long long getRet(int val) {
+	if (waveArr[val] == 0)
+	{
+		waveArr[val] = getRet(val - 1) + getRet(val - 5);
+	}
+	return waveArr[val];
+}
+</code></pre>
+
+먼저 문제의 조건을 보도록 하겠습니다.<br/>
+문제를 보면 아래와 같이 규칙이 반복되는 것을 찾을 수 있습니다.<br/>
+
+<pre><code>
+f(1) = 1
+f(2) = 1
+f(3) = 1
+f(4) = f(1) + f(3)
+f(5) = f(1) + f(3)
+f(6) = f(5) + f(1)
+f(7) = f(6) + f(2)
+f(8) = f(7) + f(3)
+f(9) = f(8) + f(4)
+f(10) = f(9) + f(5)
+f(11) = f(10) + f(6)
+</code></pre>
+
+위와 같이 f(n) = f(n-1) + f(n-5)로 나타낼 수 있으므로, 해당 규칙을 이용해 동적계획법을 이용해 풀어주도록 합니다.<br/>
+주의할 점은 100을 입력하였을 때의 값이 Integer의 최대값을 벗어나게 되므로 값의 타입을 long long으로 선언해주어야 합니다.<br/>
+
+</p>
+

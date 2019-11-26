@@ -1,0 +1,55 @@
+---
+title: External Datasets
+layout: post
+categories: spark
+---
+
+<p>
+Spark는 로컬 파일 시스템, HDFS, Cassandra, HBase, Amazon S3 등 Hadoop이 지원하는 모든 스토리지 소스에서 분산 데이터 세트를 생성 할 수 있습니다. <br/>
+Spark는 텍스트 파일, SequenceFile 및 기타 Hadoop InputFormat을 지원합니다. <br/>
+ <br/>
+텍스트 파일 RDD는 SparkContext의 textFile 메서드를 사용하여 만들 수 있습니다. <br/>
+이 메소드는 파일의 URI (시스템의 로컬 경로 또는 hdfs : //, s3a : // 등의 URI)를 가져 와서 각각의 행으로 이루어진 collection처럼 읽습니다. <br/>
+다음은 호출 예제입니다. <br/>
+
+<pre><code>JavaRDD<String> distFile = sc.textFile("data.txt");
+</code></pre>
+
+일단 생성되면 distFile은 dataSet operation에 의해 작동 될 수 있습니다. <br/>
+예를 들어, 아래와 같이 map과 reduce 작업을 통해 우리는 모든 행의 사이즈를 더할 수 있습니다. <br/>
+distFile.map(s -> s.length()).reduce((a, b) -> a + b). <br/>
+ <br/>
+Spark로 파일을 읽는 것에 대한 참고 사항 : <br/>
+ <br/>
+- 로컬 파일 시스템 경로를 사용하는 경우 worker node에서도 동일한 경로에서 파일에 액세스 할 수 있어야합니다. <br/>
+  파일을 모든 node에 복사하거나 네트워크 공유 파일 시스템을 사용하십시오. <br/>
+ <br/>
+- textFile 메서드를 포함한 Spark의 모든 파일 기반 입력 방법은 디렉토리, 압축 파일 및 와일드카드에서의 실행도 지원합니다. <br/>
+  예를 들어 textFile("/my/directory"), textFile( "/my/directory/*. txt") 및 textFile("/my/directory/*. gz")을 사용할 수 있습니다. <br/>
+   <br/>
+- textFile 메소드는 파일의 파티션 수를 제어하기 위해 선택적으로 두 번째 인수를 사용합니다.   <br/>
+  기본적으로 Spark는 파일의 각 블록(HDFS에서 기본적으로 128MB인 블록)에 대해 하나의 파티션을 생성하지만 더 큰 값을 전달하여 더 많은 수의 파티션을 요청할 수도 있습니다. <br/>
+  단 블록의 갯수보다 더 적은 수의 파티션을 가질 수는 없습니다. <br/>
+ <br/>
+텍스트 파일 외에도 Spark의 Java API는 여러 가지 다른 데이터 형식도 지원합니다.: <br/>
+ <br/>
+- JavaSparkContext.wholeTextFiles를 사용하면 여러 개의 작은 텍스트 파일이 포함 된 디렉토리를 읽고 각 파일에 대해 (파일 이름, 컨텐츠) 쌍으로 리턴합니다. <br/>
+  이것은 각 파일에서 한 줄에 하나의 레코드를 반환하는 textFile 메서드와 대조적입니다. <br/>
+   <br/>
+- SequenceFiles의 경우 SparkContext의 sequenceFile [K, V] 메서드를 사용하십시오. 여기서 K와 V는 파일의 키 및 값 유형입니다. <br/>
+  이들은 IntWritable 및 Text 메서드와 같은 Hadoop의 Writable 인터페이스의 subClass여야합니다. <br/>
+   <br/>
+- 다른 Hadoop InputFormat의 경우 임의의 JobConf 및 input format 클래스, key 클래스 및 value 클래스를 사용하는 JavaSparkContext.hadoopRDD 메소드를 사용할 수 있습니다. <br/>
+  input 소스를 사용하여 Hadoop 작업 때와 동일한 방식으로 설정하십시오. <br/>
+  "새로운" MapReduce API (org.apache.hadoop.mapreduce)를 기반으로 입력 형식에 JavaSparkContext.newAPIHadoopRDD를 사용할 수도 있습니다. <br/>
+ <br/>
+- JavaRDD.saveAsObjectFile 및 JavaSparkContext.objectFile 메서드는 RDD를 직렬화된 Java 오브젝트로 구성된 간단한 형식으로 저장을 지원합니다. <br/>
+  이것은 Avro와 같은 특수 형식만큼 효율적이지는 않지만 RDD를 쉽게 저장할 수 있는 방법 중 하나입니다. <br/>
+<br/>
+참조 : https://spark.apache.org/docs/2.1.1/programming-guide.html#external-datasets<br/> 
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+
+
+
+</p>
+

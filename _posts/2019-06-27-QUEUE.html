@@ -1,0 +1,110 @@
+---
+title: 큐
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/10845 <br/><br/>
+
+이번은 큐의 개념을 익히고 실습하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String args[]) {
+
+        Scanner sc = new Scanner(System.in);
+
+        int size = sc.nextInt();
+
+        Queue queue = new Queue(size);
+
+        for (int i = 0; i < size; i++) {
+            switch (sc.next()) {
+                case "push":
+                    int val = sc.nextInt();
+                    queue.push(val);
+                    break;
+                case "pop":
+                    System.out.println(queue.pop());
+                    break;
+                case "size":
+                    System.out.println(queue.size());
+                    break;
+                case "empty":
+                    System.out.println(queue.empty());
+                    break;
+                case "front":
+                    System.out.println(queue.front());
+                    break;
+                case "back":
+                    System.out.println(queue.back());
+                    break;
+            }
+        }
+    }
+}
+
+class Queue {
+    private int head;
+    private int tail;
+    private int[] arr;
+
+    Queue(int size) {
+        this.head = 0;
+        this.tail = -1;
+        arr = new int[size];
+    }
+
+    void push(int data) {
+        tail++;
+        arr[tail] = data;
+    }
+
+    int pop() {
+        if (head > tail) {
+            return -1;
+        }
+        int val = arr[head];
+        head++;
+        return val;
+    }
+
+    int size() {
+        return tail - head + 1;
+    }
+
+    int empty() {
+        if (head > tail) {
+            return 1;
+        }
+        return 0;
+    }
+
+    int front() {
+        if (head > tail) {
+            return -1;
+        }
+        return arr[head];
+    }
+
+    int back() {
+        if (head > tail) {
+            return -1;
+        }
+        return arr[tail];
+    }
+}
+</code></pre>
+
+이번에는 size가 정해져있기 때문에, array로 queue를 구현해보도록 하겠습니다.<br/>
+head와 tail을 선언하고 각각 0,-1로 값을 초기화해주도록 합니다.<br/>
+push를 할 때는 tail의 값을 1만큼 더해주고 arr[tail]값에 data를 넣어주도록 합니다.<br/>
+pop은 앞에서 빼는 것이므로 arr[head]의 값을 return하고 head는 1만큼 뒤로 이동시켜줍니다.<br/>
+size는 tail-head+1개 만큼 arr에 값이 들어있는 것이므로 해당 값을 return해줍니다.<br/>
+front는 arr[head]의 값, back은 arr[tail]의 값을 return 해주도록 합니다.<br/>
+
+</p>
+

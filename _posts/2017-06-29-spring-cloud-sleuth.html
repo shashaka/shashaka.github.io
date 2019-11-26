@@ -1,0 +1,60 @@
+---
+title: Spring Cloud Slueth 설정
+layout: post
+categories: springboot
+---
+
+<!-- Text stuff -->
+<p>스프링 클라우드 슬루스를 통해서, 마이크로 서비스 아키텍쳐 상에서 request를 추적할 수 있습니다. <br/>
+해당 dependency 설정을 통해, slueth 는 각각의 request마다 traceId, spanId를 발행합니다. <br/>
+해당 값을 통해 사용자로부터 들어온 Request가 MSA에서 어떤 모듈을 통해 전송되고 응답되었는지 추적할 수 있습니다.<br/>
+
+End to End 단에서 전체 request flow는 같은 traceId를 가지게 되고, 각각의 모듈은 동일한 spanId를 가지게 됩니다.<br/>
+따라서, 전체 flow에서 사용자로부터 온 request는 거쳐온 모든 모듈에서 같은 traceId를 가지게 되고, 각각의 모듈 별로 다른 spanId를 가지게 됩니다.<br/>
+<br/>
+spring-cloud-starter-sleuth 라이브러리 추가만으로,request에 traceId와 spanId 발행이 이루어집니다.<br/>
+<br/>
+이 예제에서는 interceptor를 통해, 모든 request에 traceId와 spanId 를 log로 남기도록 합니다.</p>
+
+<pre><code>
+package org.blog.test.config;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@Slf4j
+@Component
+public class TraceInterceptor extends HandlerInterceptorAdapter {
+
+    @Autowired
+    private Tracer tracer;
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        log.info("[{}] {} spanId : [{}], traceId : [{}]", request.getMethod(), request.getRequestURI(), tracer.getCurrentSpan().getTraceId(), tracer.getCurrentSpan().getSpanId());
+        return true;
+    }
+}
+</code></pre>
+
+<p>
+해당 interceptor를 통해 request가 호출될 때 아래와 같이 log가 남겨지게 됩니다.
+</p>
+
+<pre><code>
+2017-06-30 00:20:11.745  INFO [slueth-application,5c330db5e121700a,5c330db5e121700a,false] 11200 --- [nio-8080-exec-1] org.blog.test.config.TraceInterceptor    : [GET] /test/call spanId : [6643668950118920202], traceId : [6643668950118920202]
+2017-06-30 00:20:11.835  INFO [slueth-application,5c330db5e121700a,18462ed55b34706c,false] 11200 --- [nio-8080-exec-2] org.blog.test.config.TraceInterceptor    : [GET] /test spanId : [6643668950118920202], traceId : [1749136999173091436]
+</code></pre>
+
+<p>전체 예제는 아래 링크에서 다운로드 받을 수 있습니다.<br/>
+<br/>
+https://gitlab.com/shashaka/slueth-project</p>
+
+
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>

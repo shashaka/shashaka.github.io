@@ -1,0 +1,50 @@
+---
+title: 수 정렬하기 3
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/10989 <br/><br/>
+
+이번은 주어진 숫자를 counting sort를 통해 정렬하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.io.*;
+
+public class Main {
+
+    private static int[] countArr = new int[10001];
+
+    public static void main(String args[]) throws IOException {
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out));
+
+        int size = Integer.parseInt(reader.readLine());
+        int[] arr = new int[size];
+        for (int i = 0; i < size; i++) {
+            int value = Integer.parseInt(reader.readLine());
+            countArr[value]++;
+        }
+
+        for (int i = 0; i < countArr.length; i++) {
+            if (countArr[i] != 0) {
+                for (int k = 0; k < countArr[i]; k++) {
+                    writer.write(String.valueOf(i) + "\n");
+                }
+            }
+        }
+
+        writer.flush();
+        writer.close();
+        reader.close();
+    }
+}
+</code></pre>
+
+이번 문제에서는 counting sort를 이용해 정렬해보도록 하겠습니다.<br/>
+전체 숫자의 갯수는 많지만, 범위는 10000까지이므로 intArray를 선언하여, 해당 숫자와 동일하면 array의 해당 번째 값을 올려줍니다.<br/>
+전체가 끝난 후, 값이 0이 아닌 값만 출력해주도록 합니다.<br/>
+
+</p>
+

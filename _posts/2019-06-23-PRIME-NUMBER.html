@@ -1,0 +1,62 @@
+---
+title: 소수
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/2581 <br/><br/>
+
+이번은 일정 범위 내에서 소수를 구하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    private static int[] primeNumbers = new int[10001];
+
+    public static void main(String args[]) {
+
+        primeNumbers[1] = 1;
+        for (int i = 2; i < primeNumbers.length - 1; i++) {
+            int k = 2;
+            while (true) {
+                if (k * i > primeNumbers.length - 1) {
+                    break;
+                }
+                primeNumbers[k * i]++;
+                k++;
+            }
+        }
+
+        Scanner sc = new Scanner(System.in);
+
+        int sum = 0;
+        int min = -1;
+        int start = sc.nextInt();
+        int end = sc.nextInt();
+        for (int val = start; val <= end; val++) {
+            if (primeNumbers[val] == 0) {
+                if (min == -1) {
+                    min = val;
+                }
+                sum += val;
+            }
+        }
+
+        if (min == -1) {
+            System.out.println(min);
+        } else {
+            System.out.println(sum);
+            System.out.println(min);
+        }
+    }
+}
+</code></pre>
+
+이번 문제에서는 들어오는 값의 범위가 10000까지이므로 해당 값까지의 모든 소수를 구해놓습니다.<br/>
+그 후, 들어온 값 범위에서 소수를 모두 찾아 합과 가장 작은 소수 값을 return해주도록 합니다.<br/>
+소수를 찾지 못한 경우는 -1을 return해주도록 합니다.<br/>
+
+</p>
+

@@ -1,0 +1,42 @@
+---
+title: 영화감독 숌 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1436 <br/><br/>
+
+이번은 N번째 종말의 수가 나올 때까지 차례대로 시도하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+    
+    public static void main(String args[]) {
+
+        Scanner sc = new Scanner(System.in);
+
+        int N = sc.nextInt();
+
+        int count = 666;
+        while (true) {
+            if (String.valueOf(count).contains("666")) {
+                N--;
+            }
+
+            if (N <= 0) {
+                break;
+            }
+            count++;
+        }
+        System.out.println(count);
+    }
+}
+</code></pre>
+
+이번은 일정한 수를 포함하고 있는 N번째 string을 찾는 문제입니다.<br/>
+666이 포함된 N번째 수를 찾아야하므로, 666부터 시작해 해당 수가 666을 포함하면 N의 값을 1씩 감소시키고 N이 0이 될 때 해당 수를 return 해줍니다.<br/>
+
+</p>
+

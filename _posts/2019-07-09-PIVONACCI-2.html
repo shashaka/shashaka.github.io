@@ -1,0 +1,57 @@
+---
+title: 피보나치 수 2  
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/2748 <br/><br/>
+
+이번은 동적 계획법으로 피보나치 수를 계산하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    private static long[] cache;
+
+    public static void main(String args[]) {
+
+        Scanner sc = new Scanner(System.in);
+
+        int N = sc.nextInt();
+
+        cache = new long[N + 1];
+
+        long ret = pivonacci(N);
+
+        System.out.println(ret);
+
+    }
+
+    private static long pivonacci(int n) {
+        if (n == 0) {
+            cache[0] = 0;
+            return 0;
+        } else if (n == 1) {
+            cache[1] = 1;
+            return 1;
+        }
+
+        if (cache[n] != 0) {
+            return cache[n];
+        } else {
+            long val = pivonacci(n - 1) + pivonacci(n - 2);
+            cache[n] = val;
+            return val;
+        }
+    }
+
+}
+</code></pre>
+
+이번은 피보나치 수열을 동적계획법으로 그대로 표현하여 풀어주도록 합니다.<br/>
+주요한 점은 90번째 피보나치 수열의 값은 Integer의 최대값을 벗어나므로 long으로 선언해주도록 합니다.<br/>
+
+</p>
+

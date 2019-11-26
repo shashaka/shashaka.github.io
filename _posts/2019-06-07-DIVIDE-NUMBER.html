@@ -1,0 +1,29 @@
+---
+title: 나누기 연산
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1008 <br/><br/>
+
+이번은 나누기 연산 문제를 풀어보겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+    public static void main(String args[]) {
+        Scanner scanner = new Scanner(System.in);
+        double a = scanner.nextDouble();
+        double b = scanner.nextDouble();
+        System.out.println(a / b);
+    }
+}
+
+</code></pre>
+
+java의 scanner를 통해 system 입력을 받고 nextDouble 메서드를 통해서 해당 값을 double 형태의 변수로 저장합니다.<br/>
+유의할 점은 소수점 이하 자리까지 출력해야하기 때문에 double로 받아야만 해당값으로 연산 가능하다는 것입니다. <br/>
+마지막으로 println 메서드를 통해 / 로 나누기한 값을 출력해줍니다. <br/>
+</p>
+

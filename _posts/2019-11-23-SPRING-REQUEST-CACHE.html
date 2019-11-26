@@ -1,0 +1,92 @@
+---
+title: spring request body caching
+layout: post
+categories: springboot
+---
+
+<p>
+ContentCachingRequestWrapper와 ContentCachingResponseWrapper를 사용해서
+request body와 response body를 여러번 접근해 log에 남겨보도록 하겠습니다.
+ <br/>
+먼저 아래와 같이 requestfilter를 정의해줍니다.<br/>
+
+<pre><code>
+@Component
+@Slf4j
+public class RequestFilter extends GenericFilterBean {
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        ContentCachingRequestWrapper requestWrapper = new ContentCachingRequestWrapper((HttpServletRequest) request);
+        ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper((HttpServletResponse) response);
+
+        chain.doFilter(requestWrapper, responseWrapper);
+
+        log.info("\n[{}]{} - {}\nHeaders : {}\nRequest : {}Response : {}",
+                ((HttpServletRequest) request).getMethod(),
+                ((HttpServletRequest) request).getRequestURI(),
+                responseWrapper.getStatus(),
+                getHeaders((HttpServletRequest) request),
+                getRequestBody(requestWrapper),
+                getResponseBody(responseWrapper));
+    }
+
+    private Map<String, String> getHeaders(HttpServletRequest request) {
+        Map<String, String> headerMap = new HashMap<>();
+
+        Enumeration<String> headerArray = request.getHeaderNames();
+        while (headerArray.hasMoreElements()) {
+            String headerName = headerArray.nextElement();
+            headerMap.put(headerName, request.getHeader(headerName));
+        }
+        return headerMap;
+    }
+
+    private String getRequestBody(ContentCachingRequestWrapper request) {
+        ContentCachingRequestWrapper wrapper = WebUtils.getNativeRequest(request, ContentCachingRequestWrapper.class);
+        if (wrapper != null) {
+            byte[] buf = wrapper.getContentAsByteArray();
+            if (buf.length > 0) {
+                try {
+                    return new String(buf, 0, buf.length, wrapper.getCharacterEncoding());
+                } catch (UnsupportedEncodingException e) {
+                    return "";
+                }
+            }
+        }
+        return "";
+    }
+
+    private String getResponseBody(final HttpServletResponse response) throws IOException {
+        String payload = null;
+        ContentCachingResponseWrapper wrapper =
+                WebUtils.getNativeResponse(response, ContentCachingResponseWrapper.class);
+        if (wrapper != null) {
+            byte[] buf = wrapper.getContentAsByteArray();
+            if (buf.length > 0) {
+                payload = new String(buf, 0, buf.length, wrapper.getCharacterEncoding());
+                wrapper.copyBodyToResponse();
+            }
+        }
+        return payload;
+    }
+}
+</code></pre>
+
+그리고 아래와 같이 filter를 등록해주도록 합니다.<br/>
+
+<pre><code> @Bean
+    public FilterRegistrationBean registrationBean(HttpServletRequest httpServletRequest) {
+        FilterRegistrationBean registrationBean = new FilterRegistrationBean();
+        registrationBean.setFilter(new RequestFilter());
+        return registrationBean;
+    }
+</code></pre>
+
+아래와 같이 로그로 남겨지는 것을 확인할 수 있습니다.<br/>
+
+<pre><code>[POST]/ - 200
+Headers : {content-length=17, host=localhost:8080, connection=keep-alive, content-type=application/json, accept-encoding=gzip, deflate, user-agent=HTTPie/1.0.3, accept=application/json, */*}
+Request : {"name":"value"}
+Response : {"response":"value"}
+</code></pre>
+</p>

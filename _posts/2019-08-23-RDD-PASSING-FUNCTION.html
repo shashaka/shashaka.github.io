@@ -1,0 +1,51 @@
+---
+title: RDD Operations - Passing Functions to Spark
+layout: post
+categories: spark
+---
+
+<p>
+Spark의 API는 클러스터 위에서 동작하기 위해서 driver프로그램의 passing function에 크게 의존합니다.<br/>
+Java에서 함수는 org.apache.spark.api.java.function 패키지의 인터페이스를 구현하는 클래스로 표시됩니다.<br/>
+이러한 기능을 만드는 방법에는 두 가지가 있습니다.<br/>
+<br/>
+- 익명의 내부 클래스 또는 명명 된 클래스로 자체 클래스에서 함수 인터페이스를 구현하고 해당 인스턴스를 Spark에 전달하십시오.<br/>
+- lambda expression을 사용하여 구현을 간결하게 정의하십시오.<br/>
+<br/>
+이 가이드의 대부분은 간결성을 위해 람다 구문을 사용하지만, 동일한 API를 모두 긴 형식으로 사용하는 것 역시 쉽습니다.<br/>
+<br/>
+예를 들어, 다음과 같이 코드를 작성할 수 있습니다.<br/>
+
+<pre><code>JavaRDD&lt;String&gt; lines = sc.textFile("data.txt");
+JavaRDD&lt;Integer&gt; lineLengths = lines.map(new Function&lt;String, Integer&gt;() {
+  public Integer call(String s) { return s.length(); }
+});
+int totalLength = lineLengths.reduce(new Function2&lt;Integer, Integer, Integer&gt;() {
+  public Integer call(Integer a, Integer b) { return a + b; }
+});
+</code></pre>
+
+또는 함수를 인라인으로 작성하는 것이 다루기 힘든 경우 :<br/>
+
+<pre><code>class GetLength implements Function&lt;String, Integer&gt; {
+  public Integer call(String s) { return s.length(); }
+}
+class Sum implements Function2&lt;Integer, Integer, Integer&gt; {
+  public Integer call(Integer a, Integer b) { return a + b; }
+}
+
+JavaRDD&lt;String&gt; lines = sc.textFile("data.txt");
+JavaRDD&lt;Integer&gt; lineLengths = lines.map(new GetLength());
+int totalLength = lineLengths.reduce(new Sum());
+</code></pre>
+
+Java의 익명 내부 클래스는 final로 표시되어있는 한 둘러싸는 범위의 변수에 액세스 할 수도 있습니다.<br/>
+Spark는 다른 언어와 마찬가지로 이러한 변수의 사본을 각 worker node에 제공합니다.<br/>
+<br/>
+참조 : https://spark.apache.org/docs/2.1.1/programming-guide.html#passing-functions-to-spark<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+
+
+
+</p>
+

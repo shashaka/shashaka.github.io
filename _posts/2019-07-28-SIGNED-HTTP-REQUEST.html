@@ -1,0 +1,328 @@
+---
+title: Signing HTTP Messages
+layout: post
+categories: blog
+---
+
+<p>
+개요 <br/><br/>
+HTTP 프로토콜을 사용하여 인터넷을 통해 통신을 하는 경우,서버 또는 클라이언트는 특정 메시지에 대해 보낸 사람을 인증하는 것이 바람직합니다. <br/>
+또한, 전송 중에 메시지가 변조되지 않았는지 확인하는 것 역시 권장됩니다.<br/>
+이 문서에서는 서버와 클라이언트가 디지털 서명을 사용하여 HTTP 메시지에 인증 및 메시지 무결성을 동시에 추가하는 방법에 대해 설명합니다.<br/><br/>
+
+<b>소개</b> <br/><br/>
+
+이 프로토콜 명세는 클라이언트가 HTTP 메시지에 서명 할 수있는 간단하고 표준적인 방법을 제공하기위한 것입니다.<br/>
+HTTP 인증은 Basic 및 Digest 인증 메커니즘을 정의하고, TLS 1.2는 암호화 된 강력한 전송 계층 보안을 정의하며, OAuth 2.0은 웹 서비스 요청의 인증을 위해 완전히 구체적인 대안을 제공합니다.<br/>
+이러한 접근 방식은 오늘날 다양한 수준의 보호 기능을 갖춘 인터넷에서 사용됩니다. <br/>
+그러나 이러한 구성 중 어느 것도 엔드 투 엔드 메시지 무결성을 보장하는 데 필요한 HTTP 메시지 자체를 암호로 서명하도록 설계되지는 않았습니다.<br/>
+종단 간 메시지 무결성을 위해 HTTP 메시지에 서명하는 것의 추가적인 이점은 다중 왕복이 필요없이 동일한 메커니즘을 사용하여 클라이언트를 인증 할 수 있다는 것입니다.<br/><br/>
+
+몇몇 웹 서비스 제공자들은 HTTP 메시지에 서명하기 위해 그들 만의 방식을 고안해 냈지만 현재까지 표준화 된 것은 없습니다.<br/>
+지금의 이 제안은 이전 기술을 뛰어 넘는 새로운 것은 없지만, HTTP 메시지에 디지털 서명을 추가하는 간단하면서도 강력한 메커니즘을 표준화하는 것에 유용합니다.<br/>
+<br/>
+1.1. Using Signatures in HTTP Requests<br/>
+<br/>
+보통 웹 사이트 API 기능을 보호하는 것에는 인증 메커니즘을 사용하는 것이 일반적입니다.<br/>
+종종 API에 요청되는 데이터는 서버와 클라이언트가 상호작용하는 부분 이외에 자동화된 소프트웨어의 일부분을 포함하는 경우가 있습니다.<br/>
+예를 들어, API 액세스 권한을 부여하는 데 사용되는 OAuth 및 API 보안과 같은 메커니즘이 있지만, 그와 같은 매커니즘에도 특정한 사용 사례를 위해 불필요하게 복잡하게 구현되거나, 해당 매커니즘을 이용하는 사용자에게는 받아들이기 힘든 그들 사이에 공유된 secret들이 존재합니다.<br/>
+<br/>
+지금 제안되는 specification에는 서버가 클라이언트를 인증하는 데 사용할 수있는 두 가지 메커니즘을 제공합니다.<br/>
+첫 번째는 상호작용 가능한 세션에 사용할 수있는 'Signature' HTTP 인증 스키마입니다. <br/>
+두 번째는 일반적으로 자동화 된 소프트웨어 에이전트에서 사용가능한 Signature HTTP 헤더입니다.<br/>
+ <br/>
+1.2. Using Signatures in HTTP Responses<br/>
+<br/>
+높은 보안 트랜잭션의 경우 HTTP 헤더에 추가 서명이 있으면 클라이언트가 전송 채널이 손상 되더라도 메시지의 내용이 손상되지 않았는지 확인할 수 있습니다. <br/>
+이 명세는 클라이언트가 메시지의 발신자를 인증하고 전송 중에 특정 헤더가 수정되지 않았는지 확인하는 데 사용할 수있는 HTTP Signature 헤더 메커니즘을 제공합니다.<br/>
+<br/>
+2. The Components of a Signature<br/>
+<br/>
+Signature에는 'Signature' HTTP 인증 스키마와 'Signature' HTTP 헤더로 사용되는 많은 구성요소가 있습니다. <br/>
+이 섹션에서는 Signature의 구성 요소에 대해 자세히 설명합니다<br/>
+<br/>
+2.1. Signature Parameters<br/>
+<br/>
+다음 섹션에서는 signature 변수에 대해 자세히 설명합니다.<br/>
+<br/>
+2.1.1. keyId<br/>
+<br/>
+필수 항목.<br/>
+`keyId` 필드는 서버가 서명의 유효성을 검사하는 데 필요한 구성 요소를 찾기 위해 사용할 수있는 임의의 문자열입니다. <br/>
+SSH 키 fingerprint, 키 데이터에 대한 URL, LDAP DN 등이 할당될 수 있습니다.<br/>
+<br/>
+2.1.2. algorithm<br/>
+<br/>
+필수 항목. <br/>
+`algorithm` 매개 변수는 서명을 생성 할 때 사용할 디지털 서명 알고리즘을 지정하는 데 사용됩니다. <br/>
+<br/>
+2.1.3. headers<br/>
+<br/>
+선택 헝목. <br/>
+`headers` 매개 변수는 메시지의 서명을 생성 할 때 포함 된 HTTP 헤더 목록을 지정하는 데 사용됩니다. <br/>
+지정된 경우 HTTP 헤더의 Key값의 소문자로 명시되어야 하며 하나의 공백 문자를 통해 각각 구분이 되게 사용이 되어야 합니다. <br/>
+지정하지 않은 경우 HTTP 헤더 목록에서 단일 값인`Date` 헤더만을 사용한 것과 같이 구현되어야 합니다. (필수). <br/>
+headers의 목록 순서는 중요하며 서명하는 동안 HTTP 헤더의 key-value 쌍이 연결되는 순서로 지정해야합니다.<br/>
+<br/>
+2.1.4. signature<br/>
+<br/>
+필수 항목. <br/>
+`signature` 매개 변수는 RFC 4648, Section 4에 설명 된대로 base64로 인코딩 된 디지털 서명입니다. <br/>
+클라이언트는`algorithm` 및`headers` 변수를 사용하여 `signing string'을 만듭니다. <br/>
+해당 `signing string'은`keyId`와 연관된 키와 `algorithm`에 해당하는 알고리즘으로 서명됩니다. <br/>
+그런 다음 'signature'의 값은 'signing string'으로 설정됩니다.<br/>
+<br/>
+2.2. Ambiguous Parameters<br/>
+<br/>
+위에 나열된 매개 변수 중 어떠한 매개 변수가 실수로 중복으로 사용된 경우 정의된 마지막 매개 변수를 사용해야합니다. <br/>
+또한, 매개 변수로 인식되지 않거나 올바른 형식이 아닌 매개 변수는 무시해야합니다.<br/>
+<br/>
+2.3. Signature String Construction<br/>
+<br/>
+키로 서명 된 문자열을 생성하기 위해, 클라이언트는`headers` Signature 매개 변수에 사용된 각 HTTP 헤더 필드의 값을`headers` Signature 매개 변수에 나타나는 순서대로 사용해야합니다 (필수). <br/>
+signature 계산에 HTTP 요청 대상을 포함 시키려면 `(request-target)`헤더 필드를 사용해야 합니다.<br/>
+<br/>
+<br/>
+1. 헤더 필드 이름이`(request-target)`이라면 'Method(소문자) path' 모양과 같이 사용하십시오.<br/>
+2. 소문자 형태의 필드 이름과 ASCII 콜론`:`, ASCII 스페이스``및 헤더 필드 값을 연결하여 헤더 필드 문자열을 만듭니다. <br/>
+헤더 필드 값의 앞과 뒤의 공백은 반드시 생략해야합니다 (RFC7230, 3.2.4 절에 지정되어 있음). <br/>
+하나의 헤더 필드에 값이 여러 개인 경우 헤더 필드와 연결된 모든 헤더 필드 값을 `,`으로 구분하여 연결하고 전송되는 순서대로 사용해야합니다. <br/>
+그외의 HTTP 메시지, 헤더 필드 값에 대한 다른 수정은 이루어져서는 안됩니다.<br/>
+3. 만약 해당 값이 마지막이 아니라면 `\n`을 사용하고 다음 값을 추가합니다.<br/>
+<br/>
+위에서 언급된 규칙을 설명하기 위해 다음 HTTP 요청 헤더가있는`(request-target) host date cache-control x-example`의 값을 가진`headers` 매개 변수 목록을 가정합니다.<br/>
+
+<pre><code>
+GET /foo HTTP/1.1
+Host: example.org
+Date: Tue, 07 Jun 2014 20:51:35 GMT
+X-Example: Example header
+    with some whitespace.
+Cache-Control: max-age=60
+Cache-Control: must-revalidate
+</code></pre>
+
+위의 HTTP 요청 헤더의 경우 해당 서명 문자열은 다음과 같습니다.<br/>
+
+<pre><code>
+(request-target): get /foo
+host: example.org
+date: Tue, 07 Jun 2014 20:51:35 GMT
+cache-control: max-age=60, must-revalidate
+x-example: Example header with some whitespace.
+</code></pre>
+
+2.4. Creating a Signature<br/>
+<br/>
+서명을 생성하려면 클라이언트는 다음을 수행해야합니다.<br/>
+<br/>
+1. HTTP 메시지의 내용,`headers` 값 및 Signature String Construction 알고리즘을 사용하여 서명 문자열을 만듭니다.<br/>
+2. 그런 다음 'keyId'와 관련된 '알고리즘'과 키를 사용하여 서명 문자열에 디지털 서명을 생성해야합니다.<br/>
+3. 이후, 디지털 서명 알고리즘의 출력을 base64를 통해 출력하여 'signature'가 생성됩니다.<br/>
+<br/>
+예를 들어, 'algorithm'값이 "rsa-sha256"이라고 가정합니다. <br/>
+이것은 'keyId'와 관련된 데이터가 RSA Private Key (RFC 3447에 정의됨)이고, signature string 해싱 함수는 SHA-256이며, 서명 알고리즘은 RFC 3447에 정의된 것 중 하나로 요청을 보냅니다. <br/>
+서명 생성 알고리즘의 결과는 바이너리 문자열이되며, 이진 문자열은 base 64로 인코딩되어 'signature'값에 배치됩니다.<br/>
+<br/>
+2.5. Verifying a Signature<br/>
+<br/>
+서명을 확인하기 위해 서버는 다음을 수행해야합니다.<br/>
+<br/>
+1. 수신 된 HTTP 메시지,`headers` 값 및 Signature String Construction 알고리즘을 사용하여 서명 문자열을 다시 만듭니다.<br/>
+2. 그런 다음 서명 매개 변수에 나열된`algorithm`,`keyId` 및 base64 디코딩 된`signature '가 디지털 서명의 신뢰성을 확인하는 데 사용됩니다.<br/>
+<br/>
+예를 들어, 'algorithm'값이 "rsa-sha256"이라고 가정합니다. <br/>
+이것은`keyId`와 관련된 데이터가 RSA 공개 키 (RFC 3447에 정의됨)이고, 서명 문자열 해싱 함수가 SHA-256이며, 서명 검증에 사용되는`서명`검증 알고리즘은 RFC 3447에 정의된 것 중 하나입니다. <br/>
+서명 확인 알고리즘의 결과는 서명으로 보호되는 헤더가 전송 중에 변조되지 않는 한 검증은 성공하여야 합니다.<br/>
+<br/>
+3. The 'Signature' HTTP Authentication Scheme<br/>
+<br/>
+"서명"인증 방식은 클라이언트가 공개/비공개 키 (예 : RSA) 또는 공유된 대칭 키 (예 : HMAC)에 의해 생성된 디지털 서명으로 인증하는 모델을 기반으로 합니다. <br/>
+스키마는 특정 키 유형 또는 서명 알고리즘에 바인딩되지 않도록 충분히 매개 변수화되어 있습니다. <br/>
+그러나 클라이언트가 HTTP`Date` 헤더를 보낼 수 있다고 명시적으로 가정합니다.<br/>
+<br/>
+3.1. Authorization Header<br/>
+<br/>
+클라이언트는 auth-scheme은 "Signature", "auth-param"은 Section 2: The Components of a Signature에 명시된 값으로 구성된 Authorization 헤더를 보낼 것으로 기대됩니다.<br/>
+<br/>
+다음으로 다음 HTTP 요청을 예로 사용합니다.<br/>
+
+<pre><code>
+POST /foo HTTP/1.1
+Host: example.org
+Date: Tue, 07 Jun 2014 20:51:35 GMT
+Content-Type: application/json
+Digest: SHA-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=
+Content-Length: 18
+
+{"hello": "world"}
+</code></pre>
+
+`Digest` 헤더 필드의 사용은 RFC 3230, 4.3.2 절에 따른 것이며, 단지 구현자가 어떻게 메시지의 본문에 관한 정보를 서명에 포함시킬 수 있는지에 대한 데모로 포함되어 있습니다.<br/>
+다음 섹션에서는 "rsa-key-1"keyId가 클라이언트에 알려진 개인 키와 서버에 알려진 공개 키를 참조한다고 가정합니다.<br/>
+<br/>
+3.1.1. Initiating Signature Authorization<br/>
+<br/>
+서버는 서버에 인증을 통하여, 보호 된 자원에 액세스가 가능한 때에 아래와 같이 클라이언트에 알릴 수 있습니다. <br/>
+이 프로세스를 시작하기 위해 서버는 클라이언트가 401 응답 코드를 받는 것을 통해서 자체 인증을 하기를 요청합니다. <br/>
+서버는 WWW-Authenticate 헤더에 `headers` 매개 변수를 지정하여 서명 할 것으로 예상되는 HTTP 헤더를 선택적으로 지정할 수 있습니다. <br/>
+
+<pre><code>
+HTTP/1.1 401 Unauthorized
+Date: Thu, 08 Jun 2014 18:32:30 GMT
+Content-Length: 1234
+Content-Type: text/html
+WWW-Authenticate: Signature realm="Example",headers="(request-target) date"
+
+...
+</code></pre>
+
+3.1.2. RSA Example<br/>
+<br/>
+클라이언트는 다음과 같이 서명 문자열을 작성합니다.<br/>
+
+<pre><code>
+(request-target): post /foo\n
+host: example.org\n
+date: Tue, 07 Jun 2014 20:51:35 GMT\n
+digest: SHA-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=\n
+content-length: 18
+</code></pre>
+
+RSA 기반 서명의 경우 인증 헤더 및 서명은 다음과 같이 생성됩니다.<br/>
+
+<pre><code>
+Authorization: Signature keyId="rsa-key-1",algorithm="rsa-sha256",
+headers="(request-target) host date digest content-length",
+signature="Base64(RSA-SHA256(signing string))"
+</code></pre>
+
+Appendix C. Test Values<br/>
+
+<pre><code>
+-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDCFENGw33yGihy92pDjZQhl0C3
+6rPJj+CvfSC8+q28hxA161QFNUd13wuCTUcq0Qd2qsBe/2hFyc2DCJJg0h1L78+6
+Z4UMR7EOcpfdUE9Hf3m/hs+FUR45uBJeDK1HSFHD8bHKD6kv8FPGfJTotc+2xjJw
+oYi+1hqp1fIekaxsyQIDAQAB
+-----END PUBLIC KEY-----
+</code></pre>
+
+<pre><code>
+-----BEGIN RSA PRIVATE KEY-----
+MIICXgIBAAKBgQDCFENGw33yGihy92pDjZQhl0C36rPJj+CvfSC8+q28hxA161QF
+NUd13wuCTUcq0Qd2qsBe/2hFyc2DCJJg0h1L78+6Z4UMR7EOcpfdUE9Hf3m/hs+F
+UR45uBJeDK1HSFHD8bHKD6kv8FPGfJTotc+2xjJwoYi+1hqp1fIekaxsyQIDAQAB
+AoGBAJR8ZkCUvx5kzv+utdl7T5MnordT1TvoXXJGXK7ZZ+UuvMNUCdN2QPc4sBiA
+QWvLw1cSKt5DsKZ8UETpYPy8pPYnnDEz2dDYiaew9+xEpubyeW2oH4Zx71wqBtOK
+kqwrXa/pzdpiucRRjk6vE6YY7EBBs/g7uanVpGibOVAEsqH1AkEA7DkjVH28WDUg
+f1nqvfn2Kj6CT7nIcE3jGJsZZ7zlZmBmHFDONMLUrXR/Zm3pR5m0tCmBqa5RK95u
+412jt1dPIwJBANJT3v8pnkth48bQo/fKel6uEYyboRtA5/uHuHkZ6FQF7OUkGogc
+mSJluOdc5t6hI1VsLn0QZEjQZMEOWr+wKSMCQQCC4kXJEsHAve77oP6HtG/IiEn7
+kpyUXRNvFsDE0czpJJBvL/aRFUJxuRK91jhjC68sA7NsKMGg5OXb5I5Jj36xAkEA
+gIT7aFOYBFwGgQAQkWNKLvySgKbAZRTeLBacpHMuQdl1DfdntvAyqpAZ0lY0RKmW
+G6aFKaqQfOXKCyWoUiVknQJAXrlgySFci/2ueKlIE1QqIiLSZ8V8OlpFLRnb1pzI
+7U1yQXnTAEFYM560yJlzUpOb1V4cScGd365tiSMvxLOvTA==
+-----END RSA PRIVATE KEY-----
+</code></pre>
+
+다음 테스트 데이터는 `keyId = Test`로 참고하며, RSA 2048 비트 키를 사용합니다.<br/>
+
+<pre><code>
+POST /foo?param=value&pet=dog HTTP/1.1
+Host: example.com
+Date: Thu, 05 Jan 2014 21:31:40 GMT
+Content-Type: application/json
+Digest: SHA-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=
+Content-Length: 18
+
+{"hello": "world"}
+    
+</code></pre>
+
+C.1. Default Test<br/>
+<br/>
+만약에 header 목록이 정의되어 있지 않으면, 오직 date 헤더만 포함된 것으로 간주됩니다.<br/>
+<br/>
+이 때 서명될 string은 아래와 같습니다.<br/>
+
+<pre><code>
+date: Thu, 05 Jan 2014 21:31:40 GMT
+</code></pre>
+
+이 때 Authorization 헤더는 아래와 같습니다.<br/>
+
+<pre><code>
+Authorization: Signature keyId="Test",algorithm="rsa-sha256",
+signature="jKyvPcxB4JbmYY4mByyBY7cZfNl4OW9HpFQlG7N4YcJPteKTu4MW
+CLyk+gIr0wDgqtLWf9NLpMAMimdfsH7FSWGfbMFSrsVTHNTk0rK3usrfFnti1dx
+sM4jl0kYJCKTGI/UWkqiaxwNiKqGcdlEDrTcUhhsFsOIo8VhddmZTZ8w="
+</code></pre>
+
+이 때 Signature 헤더는 아래와 같습니다.<br/>
+
+<pre><code>
+Signature: keyId="Test",algorithm="rsa-sha256",
+signature="jKyvPcxB4JbmYY4mByyBY7cZfNl4OW9HpFQlG7N4YcJPteKTu4MW
+CLyk+gIr0wDgqtLWf9NLpMAMimdfsH7FSWGfbMFSrsVTHNTk0rK3usrfFnti1dx
+sM4jl0kYJCKTGI/UWkqiaxwNiKqGcdlEDrTcUhhsFsOIo8VhddmZTZ8w="
+</code></pre>
+
+C.2. Basic Test<br/>
+<br/>
+서명 할 최소 권장 데이터는 (request-target), host 및 date입니다. <br/>
+이 경우 서명할 문자열은 다음과 같습니다.<br/>
+
+<pre><code>
+(request-target): post /foo?param=value&pet=dog
+host: example.com
+date: Thu, 05 Jan 2014 21:31:40 GMT
+</code></pre>
+
+이 때 Authorization 헤더는 아래와 같습니다.<br/>
+
+<pre><code>
+Authorization: Signature keyId="Test",algorithm="rsa-sha256",
+headers="(request-target) host date", signature="HUxc9BS3P/kPhS
+mJo+0pQ4IsCo007vkv6bUm4Qehrx+B1Eo4Mq5/6KylET72ZpMUS80XvjlOPjKzx
+feTQj4DiKbAzwJAb4HX3qX6obQTa00/qPDXlMepD2JtTw33yNnm/0xV7fQuvILN
+/ys+378Ysi082+4xBQFwvhNvSoVsGv4="
+</code></pre>
+
+C.3. All Headers Test<br/>
+<br/>
+모든 헤더와 HTTP 요청 본문의 다이제스트를 포함하는 강력한 서명은 다음 서명 문자열을 생성합니다.<br/>
+
+<pre><code>
+(request-target): post /foo?param=value&pet=dog
+host: example.com
+date: Thu, 05 Jan 2014 21:31:40 GMT
+content-type: application/json
+digest: SHA-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=
+content-length: 18
+</code></pre>
+
+이 때 Authorization 헤더는 아래와 같습니다.<br/>
+
+<pre><code>
+Authorization: Signature keyId="Test",algorithm="rsa-sha256",
+headers="(request-target) host date content-type digest content-length",
+signature="Ef7MlxLXoBovhil3AlyjtBwAL9g4TN3tibLj7uuNB3CROat/9Kae
+Q4hW2NiJ+pZ6HQEOx9vYZAyi+7cmIkmJszJCut5kQLAwuX+Ms/mUFvpKlSo9StS
+2bMXDBNjOh4Auj774GFj4gwjS+3NhFeoqyr/MuN6HsEnkvn6zdgfE2i0="
+</code></pre>
+
+이 때 Signature 헤더는 아래와 같습니다.<br/>
+
+<pre><code>
+Signature: keyId="Test",algorithm="rsa-sha256",
+headers="(request-target) host date content-type digest content-length",
+signature="Ef7MlxLXoBovhil3AlyjtBwAL9g4TN3tibLj7uuNB3CROat/9Kae
+Q4hW2NiJ+pZ6HQEOx9vYZAyi+7cmIkmJszJCut5kQLAwuX+Ms/mUFvpKlSo9StS
+2bMXDBNjOh4Auj774GFj4gwjS+3NhFeoqyr/MuN6HsEnkvn6zdgfE2i0="
+</code></pre>
+
+참조 : https://tools.ietf.org/id/draft-cavage-http-signatures-08.html<br/>
+
+</p>
+

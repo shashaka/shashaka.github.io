@@ -1,0 +1,87 @@
+---
+title: 내리막 길 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1520 <br/><br/>
+
+이번은 내리막길로만 이동하는 경우의 수를 구하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+#define INT_MAX 10001
+
+static int X, Y;
+static int** arr;
+static int** cache;
+
+int move(int startX, int startY, int endX, int endY, int val);
+
+int main(void) {
+
+	scanf("%d %d", &X, &Y);
+
+	arr = new int*[X];
+	cache = new int*[X];
+	for (int i = 0; i < X; i++)
+	{
+		arr[i] = new int[Y];
+		cache[i] = new int[Y];
+		for (int k = 0; k < Y; k++)
+		{
+			scanf("%d", &arr[i][k]);
+			cache[i][k] = -1;
+		}
+	}
+
+	printf("%d", move(0, 0, X - 1, Y - 1, INT_MAX));
+
+	return 0;
+}
+
+int move(int startX, int startY, int endX, int endY, int val) {
+
+	if (startX < 0 || startY < 0)
+	{
+		return 0;
+	}
+
+	if (startX > endX || startY > endY)
+	{
+		return 0;
+	}
+
+	if (arr[startX][startY] >= val)
+	{
+		return 0;
+	}
+
+	if (cache[startX][startY] != -1)
+	{
+		return cache[startX][startY];
+	}
+
+	if (startX == endX && startY == endY)
+	{
+		return 1;
+	}
+	else {
+		cache[startX][startY] = 0;
+		cache[startX][startY] += move(startX - 1, startY, endX, endY, arr[startX][startY]);
+		cache[startX][startY] += move(startX + 1, startY, endX, endY, arr[startX][startY]);
+		cache[startX][startY] += move(startX, startY + 1, endX, endY, arr[startX][startY]);
+		cache[startX][startY] += move(startX, startY - 1, endX, endY, arr[startX][startY]);
+	}
+
+	return cache[startX][startY];
+}
+</code></pre>
+
+(0,0)에서 시작하여 행렬 전체의 크기인 (X-1, Y-1)까지 가는 방법의 수를 구하는 문제입니다.<br/>
+상하좌우 4가지 방향으로 이동할 수 있으므로, 상하좌우로 이동했을 때 각각 해당칸에서 마지막칸까지 갈 수 있는 방법을 모두 더해주면 해당 칸에서 마지막칸에 갈 수 있는 방법의 가지수입니다.<br/>
+cache로 각각의 칸에서 이동방법의 수를 저장해두고, 0,0 위치의 값을 return 해주도록 합니다.<br/>
+<br/>
+</p>
+

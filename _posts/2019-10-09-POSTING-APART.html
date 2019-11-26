@@ -1,0 +1,153 @@
+---
+title: 단지번호붙이기 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/2667 <br/><br/>
+
+이번은 2차원 배열을 그래프로 표현해 BFS나 DFS로 순회하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+static int N;
+static int** mat;
+static int* arr;
+static int danzi = 2;
+static bool danziSet = false;
+
+void checkDanzi(int x, int y);
+void quickSort(int arr[], int low, int high);
+
+int main(void) {
+
+	scanf("%d", &N);
+
+	mat = new int*[N];
+	arr = new int[N*N];
+
+	for (int i = 0; i < N*N; i++)
+	{
+		arr[i] = 0;
+	}
+
+
+	for (int i = 0; i < N; i++)
+	{
+		mat[i] = new int[N];
+		for (int k = 0; k < N; k++)
+		{
+
+			scanf("%1d", &mat[i][k]);
+		}
+	}
+
+	for (int i = 0; i < N; i++)
+	{
+		for (int k = 0; k < N; k++)
+		{
+			danziSet = false;
+			checkDanzi(i, k);
+			if (danziSet)
+			{
+				danzi++;
+			}
+		}
+	}
+
+	for (int i = 0; i < N; i++)
+	{
+		for (int k = 0; k < N; k++)
+		{
+			if (mat[i][k] != 0)
+			{
+				arr[mat[i][k]]++;
+			}
+		}
+	}
+
+	quickSort(arr, 0, danzi);
+
+	if (danzi > 1)
+	{
+		printf("%d\n", danzi - 2);
+
+		for (int i = danzi - 3; i >=0 ; i--)
+		{
+			printf("%d\n", arr[i]);
+		}
+	}
+	else {
+		printf("0");
+	}
+
+}
+
+void checkDanzi(int x, int y) {
+
+	if (x < 0 || y < 0 || x >= N || y >= N)
+	{
+		return;
+	}
+
+	if (mat[x][y] != 1)
+	{
+		return;
+	}
+
+	danziSet = true;
+
+	mat[x][y] = danzi;
+
+	checkDanzi(x - 1, y);
+	checkDanzi(x + 1, y);
+	checkDanzi(x, y - 1);
+	checkDanzi(x, y + 1);
+}
+
+
+void swap(int* a, int* b)
+{
+	int t = *a;
+	*a = *b;
+	*b = t;
+}
+
+int partition(int arr[], int low, int high)
+{
+	int pivot = arr[high];
+	int i = (low - 1);
+
+	for (int j = low; j <= high - 1; j++)
+	{
+		if (arr[j] > pivot)
+		{
+			i++;
+			swap(&arr[i], &arr[j]);
+		}
+	}
+	swap(&arr[i + 1], &arr[high]);
+	return (i + 1);
+}
+
+void quickSort(int arr[], int low, int high)
+{
+	if (low < high)
+	{
+		int pi = partition(arr, low, high);
+
+		quickSort(arr, low, pi - 1);
+		quickSort(arr, pi + 1, high);
+	}
+}
+</code></pre>
+
+dfs의 구현이 간단하니, dfs로 풀어보도록 합니다.<br/>
+행렬에서 1의 숫자가 상하좌우 중에서 하나라도 연결이 되어 있으면, 같은 단지로 묶으면 단지별로 묶을 수 있습니다.<br/>
+이미 1이 행렬에 존재하니, 단지 번호는 2부터 붙여주도록 합니다.<br/>
+행렬의 값이 1인 경우, 해당 값을 단지 번호로 바꾸어 주고 dfs로 상하좌우로 이동하며 똑같이 계속 수행해줍니다.<br/>
+행렬 전체의 traversal이 끝난 후, 단지 번호에 따라서 몇개가 존재하는지 체크해주고 quickSort를 이용해 큰 값부터 출력해주도록 합니다.<br/>
+
+</p>
+

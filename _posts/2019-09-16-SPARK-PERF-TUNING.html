@@ -1,0 +1,70 @@
+---
+title: Performance Tuning
+layout: post
+categories: spark
+---
+
+<p>
+일부 워크로드의 경우 메모리에 데이터를 캐싱하거나 일부 옵션을 설정하여 성능을 향상시킬 수 있습니다.<br/>
+<br/>
+<h3>Caching Data In Memory</h3>
+<br/>
+Spark SQL은 spark.catalog.cacheTable("tableName") 또는 dataFrame.cache()를 호출하여 메모리 내에 테이블을 캐시 할 수 있습니다.<br/>
+그런 다음 Spark SQL은 필요한 열만 검색하고 자동으로 압축을 조정하여 메모리 사용 및 GC를 최소화합니다.<br/>
+spark.catalog.uncacheTable("tableName")을 호출하여 테이블을 메모리에서 제거 할 수도 있습니다.<br/>
+<br/>
+메모리 내 캐싱 구성은 SparkSession에서 setConf 메소드를 사용하거나 SQL에서 SET key = value 명령을 실행하여 수행 할 수 있습니다.<br/>
+<br/>
+- spark.sql.inMemoryColumnarStorage.compressed<br/>
+Default : true<br/>
+Description: true로 설정하면 Spark SQL은 데이터 통계에 따라 각 열에 대한 압축 코덱을 자동으로 선택합니다.<br/>
+<br/>
+- spark.sql.inMemoryColumnarStorage.batchSize<br/>
+Default: 10000<br/>
+Description: 컬럼 캐싱에 대한 배치 크기를 제어합니다. 배치 크기가 클수록 메모리 사용률 및 압축률이 향상되지만 데이터를 캐싱 할 때 OOM이 발생할 위험이 있습니다.<br/>
+<br/>
+<h3>Caching Data In Memory</h3>
+<br/>
+다음 옵션을 사용하여 쿼리 실행 성능을 조정할 수도 있습니다.<br/>
+더 많은 최적화가 자동으로 수행됨에 따라 향후 릴리스에서 이러한 옵션이 더 이상 사용되지 않을 수 있습니다.<br/>
+<br/>
+- spark.sql.files.maxPartitionBytes<br/>
+Default : 134217728 (128 MB)<br/>
+Description: 파일을 읽을 때 단일 파티션으로 압축 할 최대 바이트 수입니다.<br/>
+<br/>
+- spark.sql.files.openCostInBytes<br/>
+Default : 4194304 (4 MB)<br/>
+Description: 동시에 여러 파일을 여는데 사용될 예상 비용을 byte로 나타낸 값. 하나의 파티션에 여러 파일을 넣을 때 사용됩니다. 기본적으로 크게 잡는 것이 좋습니다.<br/>
+<br/>
+- spark.sql.broadcastTimeout<br/>
+Default : 300<br/>
+Description: 브로드 캐스트 조인의 브로드 캐스트 최대 대기 시간(초)<br/>
+<br/>
+- spark.sql.autoBroadcastJoinThreshold<br/>
+Default : 10485760 (10 MB)<br/>
+Description: 테이블에 대한 결합을 수행 할 때 모든 작업자 노드에 브로드 캐스트할 테이블의 최대 크기(바이트)를 구성합니다. 이 값을 -1로 설정하면 브로드 캐스트를 비활성화 할 수 있습니다.<br/>
+<br/>
+- spark.sql.shuffle.partitions	<br/>
+Default : 200<br/>
+Description: 조인 또는 집계를 위해 데이터를 섞을 때 사용할 파티션 수를 구성합니다.<br/>
+<br/>
+<h3>Broadcast Hint for SQL Queries</h3>
+<br/>
+BROADCAST는 지정된 각 테이블을 다른 테이블이나 뷰와 조인 할 때 Spark가 브로드 캐스트하도록 안내합니다.<br/>
+Spark가 조인 방법을 결정할 때 통계값이 spark.sql.autoBroadcastJoinThreshold의 값보다 높다고 해도, broadcast hash join (i.e., BHJ)가 더욱 선호됩니다.<br/>
+join이 양쪽으로 명시되어 있는 경우에는 Spark는 낮은 통계값이 있는 쪽으로 broadcast하게 됩니다.<br/>
+참고로 Spark가 모든 경우 예 : 완전 외부 조인)에 BHJ를 지원하는 것은 아니므로 BHJ가 항상 선택되는 것은 아닙니다.<br/>
+브로드 캐스트 중첩 루프 조인이 선택된 경우에도 여전히 boardcast 힌트를 따릅니다.<br/>
+<br/>
+<pre><code>import static org.apache.spark.sql.functions.broadcast;
+broadcast(spark.table("src")).join(spark.table("records"), "key").show();
+</code></pre>
+<br/>
+<br/>
+https://spark.apache.org/docs/latest/sql-performance-tuning.html
+<br/>
+<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+
+</p>
+

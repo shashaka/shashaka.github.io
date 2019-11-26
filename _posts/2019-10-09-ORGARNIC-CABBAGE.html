@@ -1,0 +1,97 @@
+---
+title: 유기농 배추 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1012 <br/><br/>
+
+이번은 땅의 모습이 아니라 배추의 위치가 주어지는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+static int** mat;
+static int earthwarm;
+static bool earthwarmSet;
+
+void checkEarthwarm(int x, int y, int X, int Y);
+
+int main(void) {
+
+	int K, X, Y, count, x, y;
+
+	scanf("%d", &K);
+
+	for (int m = 0; m < K; m++)
+	{
+
+		earthwarm = 2;
+
+		scanf("%d %d %d", &X, &Y, &count);
+
+		mat = new int*[X];
+
+		for (int i = 0; i < X; i++)
+		{
+			mat[i] = new int[Y];
+			for (int k = 0; k < Y; k++)
+			{
+				mat[i][k] = 0;
+			}
+		}
+
+		for (int i = 0; i < count; i++)
+		{
+			scanf("%d %d", &x, &y);
+			mat[x][y] = 1;
+		}
+
+		for (int i = 0; i < X; i++)
+		{
+			for (int k = 0; k < Y; k++)
+			{
+				earthwarmSet = false;
+				checkEarthwarm(i, k, X, Y);
+				if (earthwarmSet)
+				{
+					earthwarm++;
+				}
+			}
+		}
+		printf("%d\n", earthwarm - 2);
+	}
+}
+
+void checkEarthwarm(int x, int y, int X, int Y) {
+
+	if (x < 0 || y < 0 || x >= X || y >= Y)
+	{
+		return;
+	}
+
+	if (mat[x][y] != 1)
+	{
+		return;
+	}
+
+	earthwarmSet = true;
+
+	mat[x][y] = earthwarm;
+
+	checkEarthwarm(x - 1, y, X, Y);
+	checkEarthwarm(x + 1, y, X, Y);
+	checkEarthwarm(x, y - 1, X, Y);
+	checkEarthwarm(x, y + 1, X, Y);
+}
+</code></pre>
+
+dfs의 구현이 간단하니, dfs로 풀어보도록 합니다.<br/>
+배추의 위치가 주어지므로 행렬을 만든 후, 해당 배추가 있는 위치를 행렬에 표시해주도록 합니다.<br/>
+행렬에서 1의 숫자가 상하좌우 중에서 하나라도 연결이 되어 있으면, 하나의 묶음으로 묶을 수 있습니다.<br/>
+이미 1이 행렬에 존재하니, 묶음 번호는 2부터 붙여주도록 합니다.<br/>
+행렬의 값이 1인 경우, 해당 값을 묶음 번호로 바꾸어 주고 dfs로 상하좌우로 이동하며 똑같이 계속 수행해줍니다.<br/>
+행렬 전체의 traversal이 끝난 후, 묶음 번호에서 2를 빼주면 전체 묶음의 갯수입니다.<br/>
+
+</p>
+

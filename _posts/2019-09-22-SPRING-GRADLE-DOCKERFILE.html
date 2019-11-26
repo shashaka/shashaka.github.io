@@ -1,0 +1,41 @@
+---
+title: Spring Gradle Dockerfile 설정
+layout: post
+categories: springboot
+---
+
+<p>
+springboot를 사용하는 application에서 Dockerfile을 설정하는 방법입니다.<br/>
+<br/>
+- Dockerfile<br/>
+<pre><code>FROM openjdk:8-jdk-alpine as build
+WORKDIR /workspace/app
+
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle .
+COPY src src
+
+RUN ./gradlew bootJar && \
+   mkdir -p target/dependency && \
+   (cd target/dependency; jar -xf ../../build/libs/*.jar)
+
+FROM openjdk:8-jdk-alpine
+VOLUME /tmp
+ARG DEPENDENCY=/workspace/app/target/dependency
+COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
+COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
+COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
+EXPOSE 8080
+ENTRYPOINT ["java","-cp","app:app/lib/*","org.shashaka.io.ApiApplication"]
+</code></pre>
+<br/>
+Spring application을 구성한 후, build.gradle이 속해져있는 가장 최상위 디렉토리에 Dockerfile을 만들어줍니다.<br/>
+간단히 jdk8을 사용하기 위해 image는 openjdk:8-jdk-alpine 를 사용해줍니다.<br/>
+위와 같은 방식은 springboot로 생성된 bootJar를 포함하지 않고, bootjar의 압축을 풀어준 후 각각의 폴더 위치에 파일을 복사함으로써 진행합니다.<br/>
+<pre><code>docker-machine ip default
+</code></pre>
+위 명령을 통해 docker의 ip를 알아낸 후, --publish 8080:8080 옵션을 통해 내부 container의 8080포트와 docker-machine의 8080 port를 연결해주도록 합니다.<br/>
+http://{docker-machine ip}:8080 호출을 통해 container의 app이 호출되는 것을 확인할 수 있습니다. <br/>
+<br/>
+</p>

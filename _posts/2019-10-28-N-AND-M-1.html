@@ -1,0 +1,55 @@
+---
+title: N과 M (1) 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/15649 <br/><br/>
+
+이번은 백트래킹 입문 문제 1를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+static int N, M;
+int* arr;
+int visit[9] = { 0 };
+void resolve(int count);
+
+int main(void) {
+
+	scanf("%d %d", &N, &M);
+	arr = new int[M];
+	resolve(0);
+}
+
+void resolve(int count) {
+	if (count == M)
+	{
+		for (int i = 0; i < M; i++)
+		{
+			printf("%d ", arr[i]);
+		}
+		printf("\n");
+		return;
+	}
+
+	for (int i = 1; i <= N; i++)
+	{
+		if (visit[i] == 0)
+		{
+			visit[i] = 1;
+			arr[count] = i;
+			resolve(count+1);
+			visit[i] = 0;
+		}
+	}
+}
+</code></pre>
+
+이전에 이미 배열에 들어간 값은 빼고, 모든 값을 순차적으로 출력하면 되므로<br/>
+1부터 N까지 차례대로 visit이 0인 경우에 arr에 값을 넣어주고, 재귀를 통해 같은 메서드를 M의 길이와 같을 때까지 반복해줍니다.<br/>
+M의 길이일 때 전체 arr를 출력해주며 반복해줍니다.<br/>
+<br/>
+</p>
+

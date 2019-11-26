@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://shashaka.github.io/sitemap.xml

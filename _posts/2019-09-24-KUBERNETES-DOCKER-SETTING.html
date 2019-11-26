@@ -1,0 +1,73 @@
+---
+title: kubernetes로 docker image 실행
+layout: post
+categories: blog
+---
+
+<p>
+쿠버네티스를 사용하여 local에서 docker image를 생성하고 실행하는 방법입니다.<br/>
+가장 먼저, minikube와 kubectl을 다운로드받고, docker도 local에 설치해줍니다.
+이후, 아래와 같이 순서대로 명령어를 실행해주면, application이 배포되고 실행되는 것을 확인할 수 있습니다.
+
+<pre><code>
+# Start minikube
+$ minikube start
+
+# Set docker env
+$ eval $(minikube docker-env)
+
+# Build image
+$ docker build -t test .
+
+# Run in minikube
+
+$ kubectl run test-node --image=test --image-pull-policy=Never
+deployment.apps/test-node created
+
+
+# Check that it's running
+
+$ kubectl get pods
+NAME                         READY   STATUS    RESTARTS   AGE
+test-node-6dbcfb9bb4-vzvm8   1/1     Running   0          90s
+
+$ kubectl get deployment
+NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+test-node   1/1     1            1           110s
+
+
+# Expose deployment as service
+# Port is the application's service port
+
+$ kubectl expose deployment test-node --type=LoadBalancer --port=8080
+service/test-node exposed
+
+
+
+# Check that the serivice is working properly.
+
+$ kubectl get services
+NAME         TYPE           CLUSTER-IP    EXTERNAL-IP   PORT(S)          AGE
+kubernetes   ClusterIP      10.96.0.1     <none>        443/TCP          21m
+test-node    LoadBalancer   10.99.2.168   <pending>     8080:30171/TCP   20s
+
+
+# Open app & get service url
+
+$ minikube service test-node
+|-----------|-----------|-------------|-----------------------------|
+| NAMESPACE |   NAME    | TARGET PORT |             URL             |
+|-----------|-----------|-------------|-----------------------------|
+| default   | test-node |             | http://192.168.99.100:30171 |
+|-----------|-----------|-------------|-----------------------------|
+* Opening kubernetes service  default/test-node in default browser...
+
+
+# Clean up
+$ kubectl delete service test-node
+$ kubectl delete deployment test-node
+$ minikube stop
+</code></pre>
+<br/>
+<br/>
+</p>

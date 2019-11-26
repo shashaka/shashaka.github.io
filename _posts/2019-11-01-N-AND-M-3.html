@@ -1,0 +1,52 @@
+---
+title: N과 M (3) 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/15651 <br/><br/>
+
+이번은 백트래킹 입문 문제 3을 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+static int N, M;
+int* arr;
+int visit[9] = { 0 };
+void resolve(int count);
+
+int main(void) {
+	scanf("%d %d", &N, &M);
+	arr = new int[M];
+	resolve(0);
+}
+
+void resolve(int count) {
+
+	if (count == M )
+	{
+		for (int i = 0; i < M; i++)
+		{
+
+			printf("%d ", arr[i]);
+		}
+		printf("\n");
+
+		return;
+	}
+
+	for (int i = 1; i <= N; i++)
+	{
+		arr[count] = i;
+		resolve(count + 1);
+	}
+}
+</code></pre>
+
+예시를 보면, 처음 숫자부터 차례대로 전체 카운트만큼 순회하면 되는 것을 알 수 있습니다.<br/>
+따라서, 재귀를 사용하여, for문으로 첫 숫자부터 마지막 숫잒지 돌려주고,<br/>
+해당 execution 마다 다시 해당 메서드를 호출하여, 전체 arr 길이가 수열의 길이만큼 되면 출력해주도록 합니다.<br/>
+<br/>
+</p>
+

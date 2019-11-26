@@ -1,0 +1,103 @@
+---
+title: Spring Cloud Config Server
+layout: post
+categories: springboot
+---
+
+<p>
+spring cloud config를 통해, 서버의 설정을 하나의 서버로 집중화시킬 수 있습니다. <br/>
+해당 서버를 통해, properties를 하나의 서버로 모으고 config client 서버가 시작할 때 해당 서버로부터 property 값을 읽어와 적용하게 됩니다.<br/>
+<br/>
+가장 먼저, 해당 properties 값을 제공하는 config server를 셋팅해보도록 하겠습니다.<br/>
+<br/>
+아래와 같이 @EnableConfigServer 와 @SpringBootApplication 를 설정함으로써 해당 서버가 cloud config server로 사용되는 것으로 선언합니다.<br/>
+
+<pre><code>package org.blog.test;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.config.server.EnableConfigServer;
+import org.springframework.context.annotation.Configuration;
+
+@SpringBootApplication
+@EnableConfigServer
+public class ConfigServerApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ConfigServerApplication.class, args);
+    }
+}
+
+</code></pre>
+
+이후, 아래와 같이 resource를 어디에서 읽어올지 설정합니다.<br/>
+아래 예제에서는 git이 아닌, 서버 내 file을 통해 property를 제공하도록 설정하였습니다.<br/>
+
+<pre><code>spring:
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/config/{application}/{profile}
+server:
+  port: 8888
+</code></pre>
+
+config server를 설정하고 테스트하면서, 어려웠던 점은 해당 config server에서 제대로 property를 제공하고 있는지 확인하는 작업이었습니다.<br/>
+다수의 구글링 끝에 아래와 같이 확인이 가능하다는 것을 찾게 되었습니다.<br/>
+
+<pre><code>http://localhost:8888/config-client/stg
+
+{
+  "name": "config-client",
+  "profiles": [
+    "stg"
+  ],
+  "label": null,
+  "version": null,
+  "state": null,
+  "propertySources": [
+    {
+      "name": "classpath:/config/config-client/stg/application.properties",
+      "source": {
+        "message": "hellow stg"
+      }
+    }
+  ]
+}
+</code></pre>
+
+다음으로, config client를 설정해보도록 합니다.<br/>
+spring cloud starter config 를 dependency에 추가해준 후, 아래와 같이 설정하면 cloud 상에서 해당 서버의 name과 profile 설정이 가능합니다.<br/>
+아래와 같이 설정한 값을 바탕으로 cloud config server로부터 값을 읽어오게 됩니다.<br/>
+
+<pre><code>spring:
+  cloud:
+    config:
+      name: config-client
+      profile: stg
+</code></pre>
+
+<h3>- profile이 dev인 경우</h3>
+
+<pre><code>2017-06-13 23:57:21.886  INFO 12464 --- [           main] org.blog.test.ConfigClientApplication    : message : hellow dev
+</code></pre>
+
+<h3>- profile이 stg인 경우</h3>
+
+<pre><code>2017-06-13 23:58:13.139  INFO 1056 --- [           main] org.blog.test.ConfigClientApplication    : message : hellow stg
+</code></pre>
+
+전체 예제는 아래 링크에서 다운로드 가능합니다.<br/>
+<br/>
+https://gitlab.com/shashaka/config-server-project <br/>
+<br/>
+https://gitlab.com/shashaka/config-client-project </p>
+
+
+
+
+
+

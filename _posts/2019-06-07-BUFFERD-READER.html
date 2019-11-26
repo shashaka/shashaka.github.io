@@ -1,0 +1,41 @@
+---
+title: 빠른 A+B
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/15552 <br/><br/>
+
+이번은 BufferedReader와 BufferedWriter 활용 문제를 풀어보겠습니다. <br/>
+
+<pre><code>import java.io.*;
+
+public class Main {
+
+    public static void main(String args[]) throws IOException {
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out))) {
+
+            int size = Integer.parseInt(reader.readLine());
+
+            for (int i = 0; i < size; i++) {
+                String[] line = reader.readLine().split(" ");
+                int value = Integer.parseInt(line[0]) + Integer.parseInt(line[1]);
+                writer.write(String.valueOf(value) + "\n");
+            }
+            writer.flush();
+        }
+    }
+}
+
+</code></pre>
+
+Java를 사용할 때 속도의 문제로 Scanner와 System.out.println 대신 BufferedReader와 BufferedWriter를 사용할 수 있습니다.<br/>
+이 때  BufferedWriter.flush는 맨 마지막에 한 번만 하면 됩니다.<br/>
+위 코드에서는 실제 활용적인 측면에서 try-with-resources를 사용하였는데, 실제 속도로는 try문 선언으로 인해 불리한 점이 있는 듯합니다. <br/>
+try-with-resources 관련 내용은 아래 url에서 확인할 수 있습니다.<br/><br/>
+https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html<br/>
+</p>
+

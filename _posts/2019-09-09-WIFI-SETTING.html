@@ -1,0 +1,140 @@
+---
+title: 공유기 설치 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/2110 <br/><br/>
+
+이번은 이분 탐색을 응용하여 최솟값이나 최댓값을 찾는 문제를 풀어보도록 하겠습니다.<br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+static int N, C;
+static long long* arr;
+
+void mergeSort(long long  arr[], int l, int r);
+long long binarySearch();
+
+int main(void) {
+
+	scanf("%d %d", &N, &C);
+
+	arr = new long long[N];
+
+	for (int i = 0; i < N; i++)
+	{
+		scanf("%lld", &arr[i]);
+	}
+
+	mergeSort(arr, 0, N - 1);
+
+	printf("%lld\n", binarySearch());
+
+	return 0;
+}
+
+
+long long binarySearch() {
+	long long left = 0;
+	long long right = arr[N - 1];
+	long long ret = 0;
+
+	while (right >= left)
+	{
+		long long mid = (right + left) / 2;
+
+		long long start = arr[0];
+		int count = 1;
+		for (int i = 1; i < N; i++)
+		{
+			if (arr[i] - start >= mid)
+			{
+				count++;
+				start = arr[i];
+			}
+		}
+
+		if (count >= C)
+		{
+			ret = mid;
+			left = mid+1;
+		}
+		else {
+			right = mid - 1;
+		}
+	}
+
+	return ret;
+}
+
+void merge(long long arr[], int l, int m, int r)
+{
+	int i, j, k;
+	int n1 = m - l + 1;
+	int n2 = r - m;
+
+	long long* L = new long long[n1];
+	long long* R = new long long[n2];
+
+	for (i = 0; i < n1; i++)
+		L[i] = arr[l + i];
+	for (j = 0; j < n2; j++)
+		R[j] = arr[m + 1 + j];
+
+	i = 0; 
+	j = 0; 
+	k = l; 
+	while (i < n1 && j < n2)
+	{
+		if (L[i] <= R[j])
+		{
+			arr[k] = L[i];
+			i++;
+		}
+		else
+		{
+			arr[k] = R[j];
+			j++;
+		}
+		k++;
+	}
+	while (i < n1)
+	{
+		arr[k] = L[i];
+		i++;
+		k++;
+	}
+
+	while (j < n2)
+	{
+		arr[k] = R[j];
+		j++;
+		k++;
+	}
+}
+
+void mergeSort(long long  arr[], int l, int r)
+{
+	if (l < r)
+	{
+
+		int m = l + (r - l) / 2;
+
+		mergeSort(arr, l, m);
+		mergeSort(arr, m + 1, r);
+
+		merge(arr, l, m, r);
+	}
+}
+</code></pre>
+
+정해진 갯수의 공유기를 설치할 때 가장 긴 최소의 값을 구하는 문제입니다.<br/>
+이분탐색으로 최소 0 부터 최대 가장 먼 좌표의 값 중에서 탐색을 하여, 공유기의 갯수의 조건에 부합하는 값을 찾도록 합니다.<br/>
+이분 탐색을 하여, 해당 공유기의 갯수가 적으면 공유기 간의 길이가 긴 것이니 최대 값을 내리고, <br/>
+해당 공유기의 갯수가 많으면 공유기 간의 길이가 짧은 것이니 최소 값을 올려주도록 합니다.<br/>
+해당 값을 이분 탐색으로 조회하고 마지막 값을 return해주도록 합니다.<br/>
+<br/>
+</p>
+

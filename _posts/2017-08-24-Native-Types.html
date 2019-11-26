@@ -1,0 +1,196 @@
+---
+title: Native Types
+layout: post
+categories: cassandra
+---
+
+<!-- Text stuff -->
+<p>
+<h3>Data Types</h3>
+</br>
+CQL은 형식화 된 언어이며 네이티브 형식, 컬렉션 형식, 사용자 정의 형식, 튜플 형식 및 사용자 지정 형식을 포함하여 풍부한 데이터 형식 집합을 지원합니다.</br>
+</br>
+
+<pre><code>cql_type ::=  native_type | collection_type | user_defined_type | tuple_type | custom_type
+</code></pre>
+
+
+<h3>Native Types</h3>
+</br>
+CQL에서 지원하는 기본 유형은 다음과 같습니다 : <br/>
+</br>
+<pre><code>native_type ::=  ASCII
+                 | BIGINT
+                 | BLOB
+                 | BOOLEAN
+                 | COUNTER
+                 | DATE
+                 | DECIMAL
+                 | DOUBLE
+                 | DURATION
+                 | FLOAT
+                 | INET
+                 | INT
+                 | SMALLINT
+                 | TEXT
+                 | TIME
+                 | TIMESTAMP
+                 | TIMEUUID
+                 | TINYINT
+                 | UUID
+                 | VARCHAR
+                 | VARINT
+</code></pre>
+
+다음 표에서는 native 데이터 형식에 대한 추가 정보와 각 형식이 지원하는 종류의 상수를 제공합니다.<br/>
+</br>
+
+<div class="table-wrapper">
+		<table>
+			<thead>
+				<tr>
+					<th>type</th>
+					<th>지원되는 상수 </th>
+					<th>description</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>ascii</td>
+					<td>string</td>
+					<td>ASCII character string</td>
+				</tr>
+				<tr>
+					<td>bigint</td>
+					<td>integer</td>
+					<td>64-bit signed long</td>
+				</tr>
+				<tr>
+					<td>blob</td>
+					<td>blob</td>
+					<td>임의의 바이트 (유효성 검사 없음)</td>
+				</tr>
+				<tr>
+					<td>boolean</td>
+					<td>boolean</td>
+					<td>true 혹은 false</td>
+				</tr>
+				<tr>
+					<td>counter</td>
+					<td>integer</td>
+					<td>Counter column (64-bit signed value).</td>
+				</tr>
+				<tr>
+					<td>date</td>
+					<td>integer, string</td>
+					<td>날짜 (해당 시간 값 없음).</td>
+				</tr>
+				<tr>
+					<td>decimal</td>
+					<td>integer, float</td>
+					<td>10 진수</td>
+				</tr>
+				<tr>
+					<td>double</td>
+					<td>integer, float</td>
+					<td>64 비트 IEEE-754 부동 소수점</td>
+				</tr>
+				<tr>
+					<td>duration</td>
+					<td>duration</td>
+					<td>나노초 정밀도의 지속 시간.</td>
+				</tr>
+				<tr>
+					<td>float</td>
+					<td>integer, float</td>
+					<td>32 비트 IEEE-754 부동 소수점</td>
+				</tr>
+				<tr>
+					<td>inet</td>
+					<td>string</td>
+					<td>IP 주소, IPv4 (4 바이트 길이) 또는 IPv6 (16 바이트 길이).
+              inet 상수가 없으므로 IP 주소는 문자열로 입력해야합니다.</td>
+				</tr>
+				<tr>
+					<td>int</td>
+					<td>integer</td>
+					<td>32 비트 부호있는 int</td>
+				</tr>
+				<tr>
+					<td>smallint</td>
+					<td>integer</td>
+					<td>16 비트 부호있는 int</td>
+				</tr>
+				<tr>
+					<td>text</td>
+					<td>string</td>
+					<td>UTF8로 인코딩 된 문자열</td>
+				</tr>
+				<tr>
+					<td>time</td>
+					<td>integer, string</td>
+					<td>나노초 정밀도가있는 시간 (해당 날짜 값 없음).</td>
+				</tr>
+				<tr>
+					<td>timestamp</td>
+					<td>integer, string</td>
+					<td>밀리 초 정밀도를 갖는 timestamp (날짜 및 시간).</td>
+				</tr>
+				<tr>
+					<td>timeuuid</td>
+					<td>uuid</td>
+					<td>UUID, 일반적으로 "충돌없는" timestamp으로 사용됩니다. </td>
+				</tr>
+				<tr>
+					<td>tinyint</td>
+					<td>integer</td>
+					<td>8 비트 부호있는 int</td>
+				</tr>
+				<tr>
+					<td>uuid</td>
+					<td>uuid</td>
+					<td>모든 버전의 UUID</td>
+				</tr>
+				<tr>
+					<td>varchar</td>
+					<td>string</td>
+					<td>UTF8로 인코딩 된 문자열</td>
+				</tr>
+				<tr>
+					<td>varint</td>
+					<td>integer</td>
+					<td>임의의 정밀도 정수</td>
+			</tbody>
+		</table>
+	</div>
+	
+	<hr />
+</br>
+<h3>Counters</h3>
+</br>
+카운터 유형은 카운터 열을 정의하는 데 사용됩니다.<br/>
+카운터 열은 값이 64 비트 부호있는 정수이며 증가 및 감소 (구문에 대해서는 UPDATE 문을 참조하십시오)의 두 가지 연산이 지원되는 열입니다.<br/>
+카운터의 값은 설정할 수 없습니다 : <br/>
+카운터는 처음으로 증가 / 감소 할 때까지 존재하지 않으며 최초 값이 0 인 것처럼 첫 번째 증가 / 감소가 이루어집니다.<br/>
+<br/>
+카운터에는 몇 가지 중요한 제한 사항이 있습니다 :<br/>
+</br>
+<h4>- 테이블의 PRIMARY KEY 컬럼 부분에는 사용할 수 없습니다.</h4>
+</br>
+<h4>- 카운터가 포함 된 테이블은 카운터 만 포함 할 수 있습니다.</h4></br>
+즉, PRIMARY KEY 가 아닌 테이블의 모든 열이 카운터 유형을 갖거나 ,아무 열도 카운터를 가지지 않아야 합니다.<br/>
+</br>
+<h4>- 카운터는 만료를 지원하지 않습니다.<h4>
+</br>
+<h4>- 카운터 삭제는 지원되지만 카운터를 처음 삭제할 때만 작동합니다.<h4>
+즉, 삭제 한 카운터를 다시 업데이트하면 안됩니다 (올바른 행동이 보장되지 않습니다).<br/>
+</br>
+<h4>- 카운터 업데이트는 본질적으로 idemptotent가 아닙니다.<h4>
+중요한 결과는 카운터 갱신이 예기치 않게 실패한 경우 (시간 초과 또는 코디네이터 노드로의 연결 유실), 클라이언트는 갱신 사항이 적용되었는지 여부를 알 수 없습니다.<br/>
+특히 업데이트를 다시 실행하면 초과 카운트가 발생할 수도 있고 그렇지 않을 수도 있습니다.<br/>
+<br/>
+
+출처 : http://cassandra.apache.org/doc/latest/cql/types.html  <br/>
+<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+</p>

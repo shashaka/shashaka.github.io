@@ -1,0 +1,127 @@
+---
+title: Propagation REQUIRES_NEW
+layout: post
+categories: springboot
+---
+
+<p>
+현재 spring에서 선언할 수 있는 transaction의 격리 수준을 테스트 해보도록 하겠습니다.<br/>
+<br/>
+가장 먼저 아래와 같이 person이라는 table에 접근하는 서비스 [PersonService]를 선언하도록 합니다.<br/>
+해당 서비스에서는 PersonNewService 라는 서비스를 접근하게 되고, 해당 서비스는 transaction이 격리 수준을 변화시켜<br/>
+어떻게 commit, rollback 등이 진행되는지 알아보도록 하겠습니다.<br/>
+
+<pre><code>@Service
+@Transactional
+@Slf4j
+public class PersonServiceImpl implements PersonService {
+
+    @Autowired
+    private PersonRepository personRepository;
+
+    @Autowired
+    private PersonNewService personNewService;
+
+    @Override
+    @Transactional
+    public void addPerson(String name) throws Exception {
+        Person person = new Person();
+        person.setName(name);
+        personRepository.save(person);
+
+        personNewService.addNewPerson("newName");
+        
+    }
+}
+</code></pre>
+
+<pre><code>@Service
+@Slf4j
+public class PersonNewServiceImpl implements PersonNewService {
+
+    @Autowired
+    private PersonRepository personRepository;
+
+    @Autowired
+    private PersonService personService;
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void addNewPerson(String newName) {
+
+        Person newPerson = new Person();
+        newPerson.setName(newName);
+    }
+}
+</code></pre>
+
+가장 먼저, 정상 동작하는 지 알아보도록 하겠습니다.<br/>
+<br/>
+해당 API를 호출하였을 때, 정상적으로 아래와 같이 값이 입력되는 것을 확인할 수 있습니다.<br/>
+
+<pre><code>mysql> select * from person;
++----+---------+
+| id | name    |
++----+---------+
+| 18 | dfefe   |
+| 19 | newName |
++----+---------+
+2 rows in set (0.00 sec)
+</code></pre>
+
+또한, "TransactionSynchronizationManager.getCurrentTransactionName()" 메소드를 통해,<br/>
+현재 transaction의 name을 가져왔을 때 두 메소드 내에서 다른 이름의 transaction이 실행되고 있는 것을 확인할 수 있습니다.<br/>
+
+<pre><code>2017-10-08 18:06:41.383  INFO 15092 --- [nio-8080-exec-1] o.b.t.p.service.impl.PersonServiceImpl   : addPerson : org.blog.test.person.service.impl.PersonServiceImpl.addPerson
+2017-10-08 18:06:41.388  INFO 15092 --- [nio-8080-exec-1] o.b.t.p.s.impl.PersonNewServiceImpl      : addNewPerson : org.blog.test.person.service.impl.PersonNewServiceImpl.addNewPerson
+</code></pre>
+
+그럼 Exception 발생시의 rollback 및 commit 상태에 대해 테스트를 진행해보도록 하겠습니다.<br/>
+Exception은 "throw new RuntimeException();"을 통해 발생시키도록 합니다.<br/>
+<br/>
+<h3>1. addNewPerson이 호출된 이후, addPerson에서 Exception 발생한 경우</h3>
+<br/>
+기존의 transaction A가 실행되고, 새로운 transaction B가 실행되고 commit된 이후, <br/>
+transaction A로 다시 돌아와서 해당 transaction A가 끝나기 전 Exception이 발생한 경우입니다.<br/>
+<br/>
+전체 API에서는 exception이 발생하게 되고, 새로운 transaction B는 이미 commit 된 이후이기 때문에<br/>
+exception 여부와 상관없이 transaction B에서 실행된 내역은 그대로 DB에 입력되게 됩니다.<br/>
+하지만, 기존 transaction A는 rollback되기 때문에 addPerson에서 입력한 값은 commit되지 않는 것을 확인할 수 있습니다.<br/>
+
+<pre><code>mysql> select * from person;
++----+---------+
+| id | name    |
++----+---------+
+| 23 | newName |
++----+---------+
+1 row in set (0.00 sec)
+</code></pre>
+
+<br/>
+<h3>2. addNewPerson이 호출된 이전, addPerson에서 Exception 발생한 경우</h3>
+<br/>
+transaction B가 시작하기 전, transaction A가 rollback되기 때문에<br/>
+transaction A,B 모두 commit 되지 않습니다.<br/>
+
+<pre><code>mysql> select * from person;
+Empty set (0.00 sec)
+</code></pre>
+
+<h3>3. addNewPerson이 호출된 이후, addNewPerson에서 exception이 발생한 경우</h3>
+<br/>
+transaction B에서 exception이 발생 후, transaction B가 rollback되고 transaction A도 반영되지 않습니다.<br/>
+
+<pre><code>mysql> select * from person;
+Empty set (0.00 sec)
+</code></pre>
+
+<h3>4. addNewPerson이 호출된 이후, addNewPerson에서 호출한 외부 메서드에서 Exception이 발생한 경우</h3>
+<br/>
+외부 호출 메서드 역시 transaction B에서 진행되며 해당 transaction에서 exception이 발생 후, <br/>
+transaction B가 rollback되고 transaction A도 반영되지 않습니다.<br/>
+
+<pre><code>mysql> select * from person;
+Empty set (0.00 sec)
+</code></pre>
+
+감사합니다~!! </p>

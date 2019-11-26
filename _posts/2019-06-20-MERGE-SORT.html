@@ -1,0 +1,98 @@
+---
+title: 수 정렬하기 2
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/2751 <br/><br/>
+
+이번은 주어진 숫자를 merge sort를 통해 정렬하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.io.*;
+import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String args[]) throws IOException {
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out));
+
+        int size = Integer.parseInt(reader.readLine());
+        int[] arr = new int[size];
+        for (int i = 0; i < size; i++) {
+            int value = Integer.parseInt(reader.readLine());
+            arr[i] = value;
+        }
+        mSort(arr, 0, arr.length - 1);
+
+        for (int value : arr) {
+            writer.write(String.valueOf(value) + "\n");
+        }
+        writer.flush();
+        writer.close();
+        reader.close();
+    }
+
+
+    private static void mSort(int[] arr, int start, int end) {
+        if (start < end) {
+            int middle = (start + end) / 2;
+
+            mSort(arr, start, middle);
+            mSort(arr, middle + 1, end);
+
+            merge(arr, start, middle, end);
+        }
+    }
+
+    private static void merge(int[] arr, int start, int middle, int end) {
+        int leftSize = middle - start + 1;
+        int rightSize = end - middle;
+
+        int[] left = new int[leftSize];
+        int[] right = new int[rightSize];
+
+        for (int i = 0; i < leftSize; i++) {
+            left[i] = arr[start + i];
+        }
+        for (int i = 0; i < rightSize; i++) {
+            right[i] = arr[middle + 1 + i];
+        }
+
+        int i = 0;
+        int j = 0;
+        int k = start;
+        while (i < leftSize && j < rightSize) {
+            if (left[i] < right[j]) {
+                arr[k] = left[i];
+                i++;
+            } else {
+                arr[k] = right[j];
+                j++;
+            }
+            k++;
+        }
+
+        while (i < leftSize) {
+            arr[k] = left[i];
+            i++;
+            k++;
+        }
+
+        while (j < rightSize) {
+            arr[k] = right[j];
+            j++;
+            k++;
+        }
+    }
+}
+</code></pre>
+
+이번 문제에서는 merge sort를 이용해 정렬해보도록 하겠습니다.<br/>
+merge sort는 주어진 arr를 모두 개별로 쪼갠 다음, 다시 합치면서 순서를 정렬하는 방식입니다. 주로 대용량의 데이터의 정렬에 적합합니다.<br/>
+mSort에서는 가운데를 기점으로 두개의 arr로 나누고 각각을 다시 mSort로 정렬하고 합치는 방식을 반복합니다.<br/>
+
+</p>
+

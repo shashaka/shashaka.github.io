@@ -1,0 +1,177 @@
+---
+title: Collections
+layout: post
+categories: cassandra
+---
+
+<!-- Text stuff -->
+<p>
+CQL은 Map, Sets 및 List의 3 가지 컬렉션을 지원합니다.<br/>
+이러한 컬렉션의 유형은 다음과 같이 정의됩니다 :
+
+<pre><code>collection_type ::=  MAP '<' cql_type ',' cql_type '>'
+                     | SET '<' cql_type '>'
+                     | LIST '<' cql_type '>'
+</code></pre>
+
+그리고 그 값은 콜렉션 리터럴을 사용하여 입력 할 수 있습니다.<br/>
+<br/>
+<pre><code>collection_literal ::=  map_literal | set_literal | list_literal
+map_literal        ::=  '{' [ term ':' term (',' term : term)* ] '}'
+set_literal        ::=  '{' [ term (',' term)* ] '}'
+list_literal       ::=  '[' [ term (',' term)* ] ']'
+</code></pre>
+
+그러나 콜렉션 리터럴에서는 bind_marker와 NULL이 지원되지 않습니다.<br/>
+<br/>
+
+<h3>Noteworthy characteristics</h3>
+<br/>
+컬렉션은 상대적으로 적은 양의 데이터를 저장 / 역 정규화하기위한 것입니다.<br/>
+그들은 "주어진 사용자의 전화 번호", "이메일에 적용된 라벨"등과 같이 잘 작동합니다.<br/>
+하지만 항목이 무한대로 늘어날 것으로 예상되면 ( "사용자가 보낸 모든 메시지", "센서가 등록한 이벤트"...) 컬렉션이 적합하지 않으며 특정 테이블 (클러스터링 열 포함)을 사용해야합니다.<br/>
+구체적으로 (고정되지 않은) 컬렉션에는 다음과 같은 특징과 제한이 있습니다 :<br/>
+<br/>
+<h4>- 개별 컬렉션은 내부적으로 인덱싱되지 않습니다.</h4>
+즉, 콜렉션의 단일 요소에 액세스하는 경우에도 콜렉션을 읽어야합니다 (하나의 읽기는 내부적으로 호출되지 않음).<br/>
+<br/>
+<h4>- set와 map에 대한 삽입 작업은 내부적으로 쓰기 전 읽기를 발생시키지 않지만 list에 대한 일부 작업은 수행합니다.</h4>
+또한 일부 목록 작업은 본질적으로 idempotent 이 아니며 시간 초과가 문제가 될 경우 다시 시도합니다.<br/>
+따라서 가능한 경우 list보다 set를 선호하는 것이 좋습니다.<br/>
+<br/>
+이러한 제한 사항 중 일부는 나중에 제거되거나 개선될 수도 있지만 대용량 데이터를 저장하기 위해 (단일) 컬렉션을 사용하는 것은 권장되지 않습니다.<br/>
+<br/>
+<br/>
+<h3>maps</h3>
+<br/>
+map은 키 - 값 쌍의 (정렬 된) 집합입니다. 키는 고유하며 map은 키별로 정렬됩니다.<br/>
+다음을 사용하여 map을 정의하고 삽입 할 수 있습니다.<br/>
+<br/>
+<pre><code>CREATE TABLE users (
+    id text PRIMARY KEY,
+    name text,
+    favs map<text, text> // A map of text keys, and text values
+);
+
+INSERT INTO users (id, name, favs)
+           VALUES ('jsmith', 'John Smith', { 'fruit' : 'Apple', 'band' : 'Beatles' });
+
+// Replace the existing map entirely.
+UPDATE users SET favs = { 'fruit' : 'Banana' } WHERE id = 'jsmith';
+</code></pre>
+
+또한, maps는 다음을 지원합니다.<br/>
+<br/>
+- 하나 이상의 요소 업데이트 또는 삽입 :<br/>
+<br/>
+<pre><code>UPDATE users SET favs['author'] = 'Ed Poe' WHERE id = 'jsmith';
+UPDATE users SET favs = favs + { 'movie' : 'Cassablanca', 'band' : 'ZZ Top' } WHERE id = 'jsmith';
+</code></pre>
+
+- 하나 이상의 요소 제거 (요소가 없으면 제거하는 것은 아무 작업도 하지 않으며 오류는 발생하지 않습니다) :<br/>
+<br/>
+<pre><code>DELETE favs['author'] FROM users WHERE id = 'jsmith';
+UPDATE users SET favs = favs - { 'movie', 'band'} WHERE id = 'jsmith';
+</code></pre>
+
+명심해야할 점은 maps에서 여러 요소를 제거하려면 키 set을 제거해야합니다.<br/>
+<br/>
+마지막으로 TTL은 INSERT와 UPDATE 모두에 허용되지만 두 경우 모두 TTL 세트는 새로 삽입 / 업데이트 된 요소에만 적용됩니다. 다른 말로:<br/>
+<br/>
+<pre><code>UPDATE users USING TTL 10 SET favs['color'] = 'green' WHERE id = 'jsmith';
+</code></pre>
+
+{ 'color': 'green'} 레코드에만 TTL을 적용하고 나머지 맵은 영향을받지 않습니다.<br/>
+<br/>
+<br/>
+<h3>Sets</h3>
+<br/>
+Sets은 고유 값의 (정렬 된) 모음입니다.<br/>
+다음을 사용하여 Sets를 정의하고 삽입 할 수 있습니다.<br/>
+<br/>
+<pre><code>CREATE TABLE images (
+    name text PRIMARY KEY,
+    owner text,
+    tags set<text> // A set of text values
+);
+
+INSERT INTO images (name, owner, tags)
+            VALUES ('cat.jpg', 'jsmith', { 'pet', 'cute' });
+
+// Replace the existing set entirely
+UPDATE images SET tags = { 'kitten', 'cat', 'lol' } WHERE name = 'cat.jpg';
+</code></pre>
+
+또한 sets는 다음을 지원합니다 :<br/>
+<br/>
+- 하나 또는 여러 요소 추가 (이는 세트이므로 이미 존재하는 요소를 삽입하는 것은 동작하지 않습니다) :<br/>
+<br/>
+<pre><code>CREATE TABLE images (
+    name text PRIMARY KEY,
+    owner text,
+    tags set<text> // A set of text values
+);
+
+INSERT INTO images (name, owner, tags)
+            VALUES ('cat.jpg', 'jsmith', { 'pet', 'cute' });
+
+// Replace the existing set entirely
+UPDATE images SET tags = tags + { 'gray', 'cuddly' } WHERE name = 'cat.jpg';
+</code></pre>
+
+- 하나 이상의 요소 제거 (요소가 없으면 제거하는 것은 아무 작업도 하지 않고 오류도 발생하지 않습니다) :<br/>
+<br/>
+<pre><code>UPDATE images SET tags = tags - { 'cat' } WHERE name = 'cat.jpg';
+</code></pre>
+
+마지막으로, maps의 경우처럼 TTL은 새로 삽입 된 값에만 적용됩니다.<br/>
+<br/>
+<br/>
+<h3>Lists</h3>
+<br/>
+lists은 고유 한 값이 아닌 (정렬 된) 모음입니다. 여기서 요소는 list 안의 위치에 따라 정렬됩니다.<br/>
+
+<pre><code>CREATE TABLE plays (
+    id text PRIMARY KEY,
+    game text,
+    players int,
+    scores list<int> // A list of integers
+)
+
+INSERT INTO plays (id, game, players, scores)
+           VALUES ('123-afde', 'quake', 3, [17, 4, 2]);
+
+// Replace the existing list entirely
+UPDATE plays SET scores = [ 3, 9, 4] WHERE id = '123-afde';
+</code></pre>
+
+또한 lists은 다음을 지원합니다 : <br/>
+<br/>
+- 목록에 값을 앞, 뒤에 추가 :<br/>
+
+<pre><code>UPDATE plays SET players = 5, scores = scores + [ 14, 21 ] WHERE id = '123-afde';
+UPDATE plays SET players = 6, scores = [ 3 ] + scores WHERE id = '123-afde';
+</code></pre>
+
+- list의 특정 위치에 값을 설정합니다.<br/>
+이는 list에 해당 위치에 대한 기존 요소가 있어야 한다는 것이며, 해당 list가 너무 작은 경우 오류가 발생한다는 것을 의미합니다.<br/>
+<br/>
+- 리스트 내의 특정 위치의 요소를 삭제합니다.<br/>
+이는 list에 해당 위치에 대한 기존 요소가 있어야 한다는 것이며, 해당 list가 너무 작은 경우 오류가 발생한다는 것을 의미합니다.<br/>
+또한 list에서 요소를 제거하면 목록 크기가 1 씩 감소하여 삭제 된 요소 다음의 모든 요소의 위치가 바뀝니다.<br/>
+
+<pre><code>DELETE scores[1] FROM plays WHERE id = '123-afde';
+</code></pre>
+
+- list에서 특정 값의 모든 항목을 삭제합니다 (특정 요소가 list에서 존재하지 않으면 단순히 무시되고 오류가 발생하지 않습니다).<br/>
+
+<pre><code>UPDATE plays SET scores = scores - [ 12, 21 ] WHERE id = '123-afde';
+</code></pre>
+
+마지막으로, maps의 경우처럼 TTL은 새로 삽입 된 값에만 적용됩니다.<br/>
+<br/>
+<br/>
+출처 : http://cassandra.apache.org/doc/latest/cql/types.html  <br/>
+<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+</p>

@@ -1,0 +1,72 @@
+---
+title: Spring Data Cassandra
+layout: post
+categories: springboot
+---
+
+<p>
+spring data cassandra 라이브러리를 통해서, 간단히 spring에서 cassandra를 사용할 수 있습니다. <br/>
+<br/>
+가장 먼저, application.yml 파일에 사용하게 될 cassandra에 대한 접속 정보를 설정해줍니다.<br/>
+
+<pre><code>CREATE KEYSPACE myspace WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};
+
+CREATE TABLE users (
+    id UUID,
+    name varchar,
+    PRIMARY KEY (id)
+);
+</code></pre>
+
+<pre><code>spring:
+  data:
+    cassandra:
+      contact-points: {server host}
+      username: {username}
+      password: {password}
+      keyspace-name: myspace
+</code></pre>
+
+그리고 나서, cassandra의 table에 대한 entity class를 설정해주도록 합니다.<br/>
+
+<pre><code>package org.blog.test.user.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.cassandra.mapping.PrimaryKey;
+import org.springframework.data.cassandra.mapping.Table;
+
+import java.util.UUID;
+
+@Table(value = "users")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class User {
+
+    @PrimaryKey
+    private UUID id;
+
+    private String name;
+
+}
+</code></pre>
+
+repository를 생성한 이후, 서비스 layer에서 톰캣 시작시 user를 하나 생성하도록 설정해두었습니다.<br/>
+
+<pre><code>select * from users;
+
+ id                                   | name
+--------------------------------------+----------
+ 339bc454-91ae-48f7-bce7-f00e62a00d7f | testUser
+
+</code></pre>
+
+위와 같이 정상적으로 cassandra table에 값이 들어간 것을 확인할 수 있습니다.<br/>
+<br/>
+전체 예제는 아래에서 다운로드 받을 수 있습니다.<br/>
+<br/>
+https://gitlab.com/shashaka/cassandra-project </p>
+

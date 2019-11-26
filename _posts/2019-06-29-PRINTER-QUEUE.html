@@ -1,0 +1,117 @@
+---
+title: 프린터 큐 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1966 <br/><br/>
+
+이번은 큐의 개념이 응용된 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    private static int[] numStatics;
+
+    private static Node head;
+
+
+    public static void main(String args[]) {
+
+        Scanner sc = new Scanner(System.in);
+
+        int size = sc.nextInt();
+
+        for (int i = 0; i < size; i++) {
+
+            numStatics = new int[10];
+            head = null;
+
+
+            int arrSize = sc.nextInt();
+            int targetNum = sc.nextInt();
+            for (int k = 0; k < arrSize; k++) {
+                int val = sc.nextInt();
+                Node node = addNode(val);
+                numStatics[val]++;
+                if (k == targetNum) {
+                    node.isTarget = true;
+                }
+            }
+            int count = 0;
+            Node node = head;
+            while (true) {
+
+                if (!node.deleted) {
+                    boolean deleteFlag = true;
+                    for (int m = node.data + 1; m < 10; m++) {
+                        if (numStatics[m] > 0) {
+                            deleteFlag = false;
+                            break;
+                        }
+                    }
+
+                    if (deleteFlag) {
+                        count++;
+                        numStatics[node.data]--;
+                        node.deleted = true;
+                        if (node.isTarget) {
+                            break;
+                        }
+                    }
+                }
+
+                node = node.next;
+            }
+
+            System.out.println(count);
+
+
+        }
+    }
+
+    private static Node addNode(int data) {
+        Node node = new Node(data);
+        if (head == null) {
+            head = node;
+            head.prev = node;
+            head.next = node;
+        } else {
+            node.next = head;
+            node.prev = head.prev;
+
+            head.prev.next = node;
+            head.prev = node;
+        }
+        return node;
+    }
+}
+
+class Node {
+    int data;
+    boolean isTarget = false;
+    boolean deleted = false;
+    Node prev;
+    Node next;
+
+    Node(int data) {
+        this.data = data;
+    }
+
+    Node(int data, Node prev, Node next) {
+        this.data = data;
+        this.prev = prev;
+        this.next = next;
+    }
+}
+</code></pre>
+
+이번에는 큐를 이용해 원순열을 생성하고, 규칙적으로 제거하는 문제를 풀어보도록 하겠습니다.<br/>
+가장 먼저 데이터를 넣으면서 큐를 원모양으로 반복되게 만들어줍니다.그렇게 하여 마지막 노드까지 이동한 이후에는 그 다음은 다시 head로 이동하게 됩니다.<br/>
+또한 데이터를 입력할 때 현재의 값이 어떤 값들이 있는지도 array에 저장해주어, 해당값보다 큰 값이 있는지 체크가 가능하도록 합니다.<br/>
+마지막으로 head부터 차례대로 돌아가면서 해당값보다 큰 값이 없으면 deleted로 체크해주고 targetNode가 삭제될 때까지 반복합니다.<br/>
+
+</p>
+

@@ -1,0 +1,80 @@
+---
+title: 정수 삼각형
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1932 <br/><br/>
+
+이번은 각 층의 모든 칸마다 최댓값을 저장하면서 동적 계획법으로 푸는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
+static int** tower;
+
+int main(void) {
+
+	int N;
+
+	scanf("%d", &N);
+
+	tower = new int*[N];
+
+	for (int i = 0; i < N; i++)
+	{
+		tower[i] = new int[i + 1];
+
+		if (i == 0)
+		{
+			int val;
+			scanf("%d", &tower[i][0]);
+
+		}
+		else {
+			for (int k = 0; k < i + 1; k++)
+			{
+				int val;
+				scanf("%d", &val);
+				if (k == 0)
+				{
+					tower[i][k] = tower[i - 1][k] + val;
+				}
+				else if (k == i) {
+					tower[i][k] = tower[i - 1][k - 1] + val;
+				}
+				else {
+					tower[i][k] = MAX(tower[i - 1][k - 1], tower[i - 1][k]) + val;
+				}
+			}
+		}
+	}
+
+	int maxValue = tower[N-1][0];
+
+	for (int i = 1; i < N; i++)
+	{
+		if (tower[N - 1][i] > maxValue)
+		{
+			maxValue = tower[N - 1][i];
+		}
+	}
+
+	printf("%d\n", maxValue);
+
+	return 0;
+}
+</code></pre>
+
+먼저 문제의 조건을 보도록 하겠습니다.<br/>
+각 층마다 값의 갯수가 하나씩 늘어나고 1,2,3,4,5 등의 숫자로 1씩 늘어나게 됩니다.<br/>
+값이 내려올 때는 해당 값의 왼쪽 혹은 오른쪽으로만 오는 것이 가능하므로 해당 층에 있는 칸의 최대값은 <br/>
+f[i][k] = (MAX(f[i-1][k-1],f[i-1][k]) + 현재값)<br/>
+으로 표현할 수 있습니다.<br/>
+가장 앞에 있는 0번째 칸과 마지막 칸은 각각 이전 층의 앞에 있는 칸과 뒤에 있는 칸이 없으므로 해당 칸들만 예외처리를 해서 풀어줍니다.<br/>
+마지막으로, 마지막 층까지 내려와서 해당 층에서 가장 큰 값을 출력해주도록 합니다.<br/>
+
+</p>
+

@@ -1,0 +1,62 @@
+---
+title: 카잉 달력
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/6064 <br/><br/>
+
+이번은 주어진 네 숫자를 규칙을 찾아 바꾸는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String args[]) {
+
+        Scanner sc = new Scanner(System.in);
+
+        int size = sc.nextInt();
+
+        for (int i = 0; i < size; i++) {
+            int m = sc.nextInt();
+            int n = sc.nextInt();
+            int x = sc.nextInt();
+            int y = sc.nextInt() % n;
+
+            int ret = -1;
+
+            int startX = x;
+            while (startX < m * n) {
+                if (startX % n == y) {
+                    ret = startX;
+                    break;
+                }
+                startX += m;
+            }
+
+            System.out.println(ret);
+        }
+    }
+}
+</code></pre>
+
+주어진 문제에서 공식을 찾아내기 위해서 먼저 주어진 예시를 보도록 하겠습니다. <br/>
+
+<pre><code>
+3
+10 12 3 9
+10 12 7 2
+13 11 5 6
+</code></pre>
+
+가장 첫 줄에 있는 예시를 공식으로 바꾸면 10*a + 3 = 12*b + 9로 나타낼 수 있습니다.<br/>
+코드에서 받는 변수로 나타내면 m*a + x = n*b + y 입니다.<br/>
+여기서 a,b는 각각의 수로 변화할 수 있지만 m*a + x와 n*b + y는 문제의 제한조건에 의해 m*n 보다 커질 수 없습니다.<br/>
+따라서 m*n보다 작을 동안 m*a + x를 a를 0부터 대입해서 값을 구하고, 해당 값을 n으로 나누었을 때 나머지가 y가 나오면 공식이 성립하게 됩니다.<br/>
+다만 여기서 예외는 n과 y가 같을 경우입니다. 만약, n과 y가 모두 3이라면 x % 3 != 3 이므로 y를 n으로 나누어주고 시작합니다.<br/>
+위와 같은 방식으로 값을 구하고, 값이 없을때는 -1을 return 해줍니다.<br/>
+
+</p>
+

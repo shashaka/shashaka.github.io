@@ -1,0 +1,19 @@
+---
+title: USE
+layout: post
+categories: cassandra
+---
+
+<!-- Text stuff -->
+<p>
+USE 문은 현재 키 스페이스(실행되는 연결에 대한)를 변경할 수 있게 합니다.<br/>
+CQL의 여러 객체는 키 스페이스(테이블, 사용자 정의 유형, 함수 등)에 바인딩되며 현재 키 스페이스는 해당 객체가 완전한 이름없이 참조 될 때 사용되는 기본 키 스페이스입니다 (즉, 접두어는 키 스페이스 이름입니다).<br/>
+USE 문은 현재 사용할 키 스페이스를 인수로 사용하기만 하면 됩니다.<br/>
+
+<pre><code>use_statement ::=  USE keyspace_name
+</code></pre>
+
+출처 : http://cassandra.apache.org/doc/latest/cql/ddl.html  <br/>
+<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+</p>

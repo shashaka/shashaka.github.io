@@ -1,0 +1,48 @@
+---
+title: pivotal summit 2019 seoul 후기
+layout: post
+categories: blog
+---
+
+<p>
+pivotal summit 2019 seoul에 참관하여 세션을 들을 기회가 있어, 오늘 참석하게 되었습니다.</br>
+오전은 business 관련이라, 오후에 technical 세션만 참가하여 연사들의 session을 청취하였습니다.</br>
+그 중에서 기억에 남는 세션에 관련하여 후기를 적어보도록 하겠습니다.</br>
+</br>
+- Spring into kubernetes</br>
+kubernetes와 docker의 기본 기능을 소개하고, 어떻게 사용이 가능한지 기본 동작을 시연하였습니다.</br>
+pod, service, volume의 개념 소개 및 container를 배포하고 kubernetes의 동작을 </br>
+live coding을 통해 알아볼 수 있었습니다.</br>
+그리고 spring-cloud-kubernetes를 통해서,</br>
+쉽게 kubernetes와 연동되는 application을 배포하고,</br>
+circuit breaker 연동, ribbon client를 통한 client-side loadbalancing를 확인 할 수 있었습니다.</br>
+</br>
+- Diving into reactive</br>
+기본적인 reactive 컨셉 설명과 live coding을 통한 예제 설명이 이어졌습니다.</br>
+pivotal이 주최하는 spring 관련 세미나에서는 항상 live coding을 통한 설명이 있다는 것이 흥미로웠습니다.</br>
+reactive를 이용한 프로그래밍의 장점으로는, 하나의 request를 요청하면 client와 server가 모두 waiting 상태로 되는 것과 달리</br>
+subscriber와 consumer가 각각의 리소스가 허용할 때 request를 처리하고 받을 수 있는 것이 소개되었습니다.</br>
+reactiveCrudRepository를 통해 db에 접근하고, 받은 값을 messageService를 통해 expose하는 예제가</br>
+live coding으로 진행되었습니다.</br>
+</br>
+- Drinking from stream</br>
+Queue를 사용하여 queue에 값을 넣는 source, 중간에 값을 변환하는 processor, 해당 값을 가져와 처리하는 sink를</br>
+각각 spring-cloud-stream에서 supplier, function, consumer를 통해 구현하고 시연하였습니다.</br>
+인상깊었던 점은 해당 라이브러리에서 config 값을 통해 쉽게 queue의 subscription 세팅을 진행하고,</br>
+rabbitmq, kafka를 config 값만 바꿔 쉽게 연동이 가능하다는 점이었습니다.</br>
+</br>
+- Spring Cloud Gateway</br>
+Gateway의 구조 소개 [Handler mapping, Web Handler]를 진행하고,</br>
+아래와 같이 각각의 handler에서 가능한 기능을 소개하였습니다.</br>
+</br>
+Handler mapping => Predicate [Path, Host, Date/time, Method, Headers,Query Params, Cookies, Read body]</br>
+를 통해 request 구분 </br>
+Pre-filter => [Headers, Path, Rate limiting, Cookies, Hystrix, Modify body] 수행</br>
+Global filter => [Netty Router, Web Socket, Load Balancer, Metrics] 기능 수행 가능</br>
+Post-filters => [Set status, Headers, Cookies] 수행</br>
+</br>
+이 세션 또한, live coding으로 해당 기능을 구현하고 demo를 보여주는 것이 인상깊었습니다.</br>
+</br>
+이후에 SpringOne 세미나를 진행한다고 마지막에 공지를 하였는데, </br>
+해당 세미나에도 참여의 기회가 있으면 좋을 것 같습니다.</br>
+</p>

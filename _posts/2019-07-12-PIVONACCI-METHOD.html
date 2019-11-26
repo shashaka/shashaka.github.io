@@ -1,0 +1,85 @@
+---
+title: 피보나치 함수 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1003 <br/><br/>
+
+이번은 동적 계획법으로 피보나치 수에서 0과 1의 호출횟수를 구하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+int main(void);
+
+void init();
+
+int fibonacci(int n);
+
+ static int* zero_count = new int[40];
+ static int* one_count = new int[40];
+ static int* cache = new int[40];
+
+int main(void) {
+
+	int size, val;
+	scanf("%d", &size);
+
+	for (int i = 0; i < size; i++)
+	{
+		init();
+		scanf("%d", &val);
+		fibonacci(val);
+		printf("%d %d\n", zero_count[val], one_count[val]);
+	}
+
+	return 0;
+}
+
+void init()
+{
+	for (int i = 0; i < 40; i++)
+	{
+		zero_count[i] = 0;
+		one_count[i] = 0;
+		cache[i] = 0;
+	}
+	cache[1] = 1;
+
+	zero_count[0] = 1;
+	one_count[0] = 0;
+	zero_count[1] = 0;
+	one_count[1] = 1;
+}
+
+
+int fibonacci(int n) {
+	if (n == 0) {
+		return 0;
+	}
+	else if (n == 1) {
+		return 1;
+	}
+	else {
+		if (cache[n] != 0)
+		{
+			return cache[n];
+		}
+		else {
+			int val =  fibonacci(n - 1) + fibonacci(n - 2);
+			zero_count[n] = zero_count[n-1] + zero_count[n-2];
+			one_count[n] = one_count[n - 1] + one_count[n - 2];
+			cache[n] = val;
+			return val;
+		}
+	}
+}
+</code></pre>
+
+이번은 피보나치 수열을 동적계획법으로 그대로 표현하여 풀어주도록 합니다.<br/>
+다만, 해당 피보나치 수열의 값만을 저장하지 않고 해당 피보나치 수열 값을 얻을 때 0과 1을 몇번 호출하는지도 같이 저장해줍니다.<br/>
+예를 들면, 4를 구할 때는 3을 구할때와 2를 구할때 0,1을 호출해준 횟수를 더한 값과 같으므로 동일하게 저장해 return해주도록 합니다.<br/>
+
+</p>
+

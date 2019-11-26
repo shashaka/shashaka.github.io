@@ -1,0 +1,85 @@
+---
+title: Gradle Spark Application
+layout: post
+categories: spark
+---
+
+<p>
+
+이번은 gradle을 활용하여 application을 작성해보도록 하겠습니다.<br/>
+
+<pre><code>
+/* SimpleApp.java */
+package org.test.shasha;
+
+import org.apache.spark.api.java.function.FilterFunction;
+import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.Dataset;
+
+public class SimpleApp {
+    public static void main(String[] args) {
+        String logFile = "/opt/spark-2.4.3-bin-hadoop2.7/README.md";
+        SparkSession spark = SparkSession.builder().appName("Simple Application").getOrCreate();
+        Dataset<String> logData = spark.read().textFile(logFile).cache();
+
+        long numAs = logData.filter((FilterFunction<String>) s -> s.contains("a")).count();
+        long numBs = logData.filter((FilterFunction<String>) s -> s.contains("b")).count();
+
+        System.out.println("Lines with a: " + numAs + ", lines with b: " + numBs);
+
+        spark.stop();
+    }
+}
+</code></pre>
+
+이 프로그램은 Spark README에서‘a’가 포함 된 줄과 ‘b’가 포함 된 줄의 갯수를 계산합니다.<br/>
+프로그램을 빌드하기 위해 Spark를 dependency로 갖는 build.gradle 파일도 작성합니다. <br/>
+해당 spark dependency는 이미 설치된 spark에 포함되어 있으므로, dependency는 compileOnly로 설정하도록 합니다.<br/>
+
+<pre><code>
+plugins {
+    id 'java'
+}
+
+sourceCompatibility = 1.8
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'org.test.shasha.SimpleApp'
+    }
+    baseName(project.name + '-all')
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly group: 'org.apache.spark', name: 'spark-sql_2.12', version: '2.4.3'
+}
+
+</code></pre>
+
+이제 Maven을 사용하여 응용 프로그램을 패키징하고 ./bin/spark-submit을 사용하여 응용 프로그램을 실행할 수 있습니다.<br/>
+
+<pre><code>
+# Package a JAR containing your application
+$ mvn package
+...
+[INFO] Building jar: {..}/{..}/target/simple-project-1.0.jar
+
+# Use spark-submit to run your application
+$ YOUR_SPARK_HOME/bin/spark-submit \
+  --class "org.test.shasha.SimpleApp" \
+  --master local[4] \
+  target/simple-project-1.0.jar
+...
+Lines with a: 46, Lines with b: 23
+</code></pre>
+
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+
+</p>
+

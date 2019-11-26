@@ -1,0 +1,87 @@
+---
+title: Creating Datasets
+layout: post
+categories: spark
+---
+
+<p>
+데이터 세트는 RDD와 유사하지만, 데이터 세트는 Java 직렬화 또는 Kryo 대신 특수 인코더를 사용하여 객체를 직렬화하고 네트워크를 통해 전송합니다.<br/>
+인코더와 표준적인 직렬화는 둘다 객체를 바이트로 변환하는 역할을 합니다.<br/>
+하지만 인코더는 코드를 동적으로 생성하며 Spark가 바이트를 객체로 역직렬화하지 않고 필터링, 정렬 및 해싱과 같은 많은 작업을 수행 할 수있는 형식을 사용합니다.<br/>
+<br/>
+<pre><code>import java.util.Arrays;
+import java.util.Collections;
+import java.io.Serializable;
+
+import org.apache.spark.api.java.function.MapFunction;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.Encoder;
+import org.apache.spark.sql.Encoders;
+
+public static class Person implements Serializable {
+  private String name;
+  private int age;
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public int getAge() {
+    return age;
+  }
+
+  public void setAge(int age) {
+    this.age = age;
+  }
+}
+
+// Create an instance of a Bean class
+Person person = new Person();
+person.setName("Andy");
+person.setAge(32);
+
+// Encoders are created for Java beans
+Encoder<Person> personEncoder = Encoders.bean(Person.class);
+Dataset<Person> javaBeanDS = spark.createDataset(
+  Collections.singletonList(person),
+  personEncoder
+);
+javaBeanDS.show();
+// +---+----+
+// |age|name|
+// +---+----+
+// | 32|Andy|
+// +---+----+
+
+// Encoders for most common types are provided in class Encoders
+Encoder&lt;Integer&gt; integerEncoder = Encoders.INT();
+Dataset&lt;Integer&gt; primitiveDS = spark.createDataset(Arrays.asList(1, 2, 3), integerEncoder);
+Dataset&lt;Integer&gt; transformedDS = primitiveDS.map(
+    (MapFunction&lt;Integer, Integer&gt;) value -&gt; value + 1,
+    integerEncoder);
+transformedDS.collect(); // Returns [2, 3, 4]
+
+// DataFrames can be converted to a Dataset by providing a class. Mapping based on name
+String path = "examples/src/main/resources/people.json";
+Dataset&lt;Person&gt; peopleDS = spark.read().json(path).as(personEncoder);
+peopleDS.show();
+// +----+-------+
+// | age|   name|
+// +----+-------+
+// |null|Michael|
+// |  30|   Andy|
+// |  19| Justin|
+// +----+-------+
+</code></pre>
+<br/>
+https://spark.apache.org/docs/latest/sql-getting-started.html#creating-datasets
+<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+
+</p>
+

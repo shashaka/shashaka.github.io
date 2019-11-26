@@ -1,0 +1,27 @@
+---
+title: Starting Point: SparkSession
+layout: post
+categories: spark
+---
+
+<p>
+Spark의 모든 기능에 대한 진입점은 SparkSession 클래스입니다. <br/>
+기본 SparkSession을 만들려면 SparkSession.builder ()를 사용하십시오.<br/>
+
+<pre><code>import org.apache.spark.sql.SparkSession;
+
+SparkSession spark = SparkSession
+  .builder()
+  .appName("Java Spark SQL basic example")
+  .config("spark.some.config.option", "some-value")
+  .getOrCreate();
+</code></pre>
+
+Spark 2.0의 SparkSession은 HiveQL을 사용하여 쿼리를 작성하는 기능, Hive UDF에 대한 액세스 및 Hive 테이블에서 데이터를 읽는 기능 등 Hive 기능을 기본적으로 지원합니다.<br/>
+이러한 기능을 사용하기 위해 기존 Hive 설정은 필요하지 않습니다.<br/>
+<br/>
+참조 : https://spark.apache.org/docs/latest/sql-getting-started.html#starting-point-sparksession
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+
+</p>
+

@@ -1,0 +1,56 @@
+---
+title: RDD Operations - Basic
+layout: post
+categories: spark
+---
+
+<p>
+RDD는 아래 두가지 타입의 operation을 지원합니다.<br/>
+transformation : 기존 데이터에서 새 데이터 세트를 생성하는 작업.<br/>
+action: dataSet에 대한 계산을 실행 한 후 드라이버 프로그램에 값을 반환하는 작업.<br/>
+<br/>
+예를 들어, map은 함수를 통해 각 데이터 집합 요소를 전달하고 새 RDD를 결과로 반환하는 transformation입니다.<br/>
+반면에 reduce는 일부 함수를 사용하여 RDD의 모든 요소를 ​​집계하고 최종 결과를 드라이버 프로그램으로 리턴하는 조치입니다 (분산 dataSet를 리턴하는 병렬 reduceByKey도 있음).<br/>
+<br/>
+Spark의 모든 변환은 lazy 기반이라 결과를 그때 그때 바로 계산합니다.<br/>
+대신,일부 기본 데이터 세트(예 : 파일)에 적용된 변환 만 기억합니다.<br/>
+transformation은 드라이버 프로그램으로 결과를 리턴해야하는 경우에만 실행됩니다.<br/>
+이 디자인은 Spark가 보다 효율적으로 실행되도록합니다.<br/>
+예를 들어, map을 통해 생성된 dataSet는 reduce에 사용되고, reduce에서 나온 결과는 driver로 전달됩니다.<br/>
+<br/>
+기본적으로 변환된 각각의 RDD는 작업을 실행할 때마다 다시 계산 될 수 있습니다.<br/>
+그러나 persist (또는 cache) method를 사용하여 메모리에 RDD를 유지할 수도 있습니다.<br/>
+이 경우 Spark는 다음에 쿼리 할 때 훨씬 빠르게 액세스 할 수 있도록 해당 요소를 클러스터에 유지합니다.<br/>
+뿐만 아니라, 디스크에 RDD를 저장시켜놓거나 여러 노드에 복제 할 수도 있습니다.<br/>
+
+<h3>Basics</h3>
+<br/>
+RDD 기본 사항을 설명하기 위해서 아래의 간단한 프로그램을 고려해보도록 합니다.<br/>
+
+<pre><code>JavaRDD<String> lines = sc.textFile("data.txt");
+JavaRDD<Integer> lineLengths = lines.map(s -> s.length());
+int totalLength = lineLengths.reduce((a, b) -> a + b);
+</code></pre>
+
+첫 번째 줄은 외부 파일으로부터 기본 RDD를 정의합니다.<br/>
+이 데이터 세트는 메모리에 로드되지않고 다른 방식으로 작동합니다. <br/>
+lines은 파일에 대한 포인터 일뿐입니다. <br/>
+또한, 두번째 줄에서 정의된 lineLengths는 map 변환의 결과물입니다.<br/>
+다시 말하지만, lineLengths는 즉시 계산되지 않고 해당 값을 연산할 차례가 되면 계산하게 됩니다.<br/>
+마지막으로 Action으로써 reduce를 실행합니다. <br/>
+이 시점에서 Spark는 계산을 개개의 시스템에서 실행하는 작업으로 나누고 각 시스템은 map과 local reduction을 모두 실행하여 드라이버 프로그램에 응답만 반환합니다.<br/>
+<br/>
+나중에 lineLengths를 다시 사용하려면 다음을 추가하십시오.<br/>
+
+<pre><code>lineLengths.persist(StorageLevel.MEMORY_ONLY());
+</code></pre>
+
+reduce를 실행하기 전에, lineLengths가 처음 계산 된 후 메모리에 저장됩니다.<br/>
+<br/>
+참조 : https://spark.apache.org/docs/2.1.1/programming-guide.html#rdd-operations<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+
+
+
+</p>
+

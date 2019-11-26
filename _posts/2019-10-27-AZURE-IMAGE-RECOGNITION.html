@@ -1,0 +1,72 @@
+---
+title: azure image recognition
+layout: post
+categories: blog
+---
+
+<p>
+먼저 MS Azure에 가입하고, computer-vision에도 구독을 추가하도록 합니다.<br/><br/>
+그 이후, 본인의 cognitive-service의 subscription key를 확인하고, 해당 key를 통해 아래와 같이 request call을 호출합니다.
+
+<pre><code>curl -H "Ocp-Apim-Subscription-Key: &lt;subscriptionKey&gt;" -H "Content-Type: application/json" "https://westcentralus.api.cognitive.microsoft.com/vision/v2.1/analyze?visualFeatures=Categories,Description&details=Landmarks&language=en" -d "{\"url\":\"http://upload.wikimedia.org/wikipedia/commons/3/3c/Shaki_waterfall.jpg\"}"
+</code></pre>
+
+아래와 같이 response가 오는 것을 확인할 수 있습니다.
+
+<pre><code>{
+  "categories": [
+    {
+      "name": "outdoor_water",
+      "score": 0.9921875,
+      "detail": {
+        "landmarks": []
+      }
+    }
+  ],
+  "description": {
+    "tags": [
+      "nature",
+      "water",
+      "waterfall",
+      "outdoor",
+      "rock",
+      "mountain",
+      "rocky",
+      "grass",
+      "hill",
+      "covered",
+      "hillside",
+      "standing",
+      "side",
+      "group",
+      "walking",
+      "white",
+      "man",
+      "large",
+      "snow",
+      "grazing",
+      "forest",
+      "slope",
+      "herd",
+      "river",
+      "giraffe",
+      "field"
+    ],
+    "captions": [
+      {
+        "text": "a large waterfall over a rocky cliff",
+        "confidence": 0.916458423253597
+      }
+    ]
+  },
+  "requestId": "b6e33879-abb2-43a0-a96e-02cb5ae0b795",
+  "metadata": {
+    "height": 959,
+    "width": 1280,
+    "format": "Jpeg"
+  }
+}
+</code></pre>
+
+reference : https://docs.microsoft.com/en-us/azure/cognitive-services/computer-vision/quickstarts/curl-analyze<br/>
+</p>

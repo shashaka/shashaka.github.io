@@ -1,0 +1,62 @@
+---
+title: 연속합  
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1912 <br/><br/>
+
+이번은 가장 큰 연속합을 구하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+static int* arr;
+static int* max_sum;
+
+int main(void) {
+
+	int N;
+	scanf("%d", &N);
+
+	arr = new int[N];
+	max_sum = new int[N];
+
+	int max = -1000;
+	for (int i = 0; i < N; i++)
+	{
+		scanf("%d", &arr[i]);
+		if (i == 0)
+		{
+			max_sum[i] = arr[i];
+		}
+		else {
+			if (max_sum[i-1] > 0)
+			{
+				max_sum[i] = arr[i] + max_sum[i - 1];
+			}
+			else {
+				max_sum[i] = arr[i];
+			}
+		}
+
+		if (max_sum[i] > max)
+		{
+			max = max_sum[i];
+		}
+	}
+
+	printf("%d", max);
+
+	return 0;
+}
+</code></pre>
+
+
+
+가장 큰 연속된 부분합 수열을 만들어야 하므로, 수열의 앞부터 차례로 합을 더해가도록 합니다.<br/>
+현재보다 앞에 있는 값이 0보다 크면 무조건 수가 더 커지므로, 현재의 바로 앞 값이 0보다 크면 계속 더해주고, 0보다 작으면 현재의 값만 저장해줍니다.<br/>
+마지막까지 체크한 이후, 위의 과정에서 나온 값 중 가장 큰 값을 출력해주도록 합니다.<br/>
+<br/>
+</p>
+

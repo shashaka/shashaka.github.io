@@ -1,0 +1,63 @@
+---
+title: Cassandra Remote Setting
+layout: post
+categories: cassandra
+---
+
+<p>
+<h3>Allowing remote access</h3>
+<br/>
+기본적으로, 카산드라는 다른 클라이언트로부터의 원격 접속을 허용하지 않습니다.<br/>
+다른 클라이언트로부터의 접속을 허용하기 위해서, 우리는 cassandra.yml 파일의 셋팅을 변경할 수 있습니다.<br/>
+<br/>
+먼저 카산드라 셋팅 파일을 열도록 합니다.<br/>
+
+<pre><code>sudo vi /etc/cassandra/cassandra.yaml
+</code></pre>
+
+rpc_address 와 broadcast_rpc_address 값을 아래와 같이 변경하도록 합니다.<br/>
+
+<pre><code>rpc_address : 0.0.0.0
+broadcast_rpc_address : 1.2.3.4
+</code></pre>
+
+rpc_address의 기본값은 localhost 이지만, 우리는 이 값을 와일드카드를 의미하는 0.0.0.0 으로 변경하도록 합니다.<br/>
+broadcast_rpc_address 는 기본값으로 주석 처리되어 있지만, 만약 rpc_address 값을 0.0.0.0 으로 변경한다면 주석을 제거해주어야 합니다.<br/>
+<br/>
+이제 카산드라는 다른 클라이언트부터의 접속을 허용하게 됩니다.<br/>
+하지만 어떠한 인증도 없이 다른 클라이언트가 카산드라에 접근이 가능하기 때문에, 우리는 카산드라를 위한 보안 설정을 하도록 하겠습니다.<br/>
+<br/>
+<br/>
+<h3>Setting security</h3>
+<br/>
+cassandra 셋팅 파일에서, authenticator 값을 변경하도록 합니다.<br/>
+
+<pre><code>authenticator: PasswordAuthenticator
+</code></pre>
+
+authenticator의 기본 값은 AllowAllAuthenticator 이지만, 우리는 이 값을 PasswordAuthenticator 로 변경하였습니다.<br/>
+최초 설정으로 admin 계정은 cassandra/cassandra 로 설정되어 있습니다.<br/>
+보안을 위해서, 우리는 새로운 super user를 생성하고 기존의 admin은 삭제하도록 합니다.<br/>
+<br/>
+아래와 같이 admin으로 cassandra에 접속하도록 합니다.<br/>
+
+<pre><code>cqlsh -u cassandra -p cassandra
+</code></pre>
+
+새로운 super user를 추가하도록 합니다.<br/>
+
+<pre><code>create user root with password 'password' superuser;
+</code></pre>
+
+super user로 로그인한 이후, 카산드라의 기존 admin 계정을 삭제하도록 합니다.<br/>
+
+<pre><code>cqlsh -u root -p password
+drop user cassandra;
+</code></pre>
+
+설정이 정상적으로 적용되었는지 아래와 같이 확인해보도록 합니다.<br/>
+
+<pre><code>list users;
+</code></pre>
+
+reference : http://www.bloger.kr/54 </p>

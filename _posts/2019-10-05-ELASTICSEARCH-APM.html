@@ -1,0 +1,40 @@
+---
+title: elasticsearch apm 설치 - Docker
+layout: post
+categories: blog
+---
+
+<p>
+docker를 통해 elasticsearch APM 서버를 연동하는 법을 알아보도록 하겠습니다.<br/>
+해당 서버를 띄우기 위해서는 elasticsearch, kibana, elasticsearch APM 서버가 필요합니다.<br/>
+세가지 서버가 서로 연동되어야 하기 때문에, docker network를 생성해주고 해당 network 안에서 서로 호출이 가능하도록 설정합니다.<br/>
+
+<pre><code>$ docker network elasti
+
+NETWORK ID          NAME                DRIVER              SCOPE
+369d7c328f9e        elasti              bridge              local
+</code></pre>
+
+이후, 아래와 같이 해당 network를 통해서 세가지 서버가 모두 동작하도록 해줍니다.<br/>
+
+<pre><code>$docker run --rm -d --name elasticsearch --net elasti  -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.4.0
+
+$docker run --rm -d --name kibana --net elasti  -p 5601:5601 kibana:7.4.0 
+
+$docker run -d --rm   --name=apm-server   --user=apm-server --net elasti  -p 8200:8200 docker.elastic.co/apm/apm-server:7.4.0   --strict.perms=false -e   -E output.elasticsearch.hosts=["elasticsearch:9200"]
+</code></pre>
+
+같은 네트워크 안에 있으면 해당 docker process의 name을 통해 통신이 서로 가능합니다.<br/>
+elasticsearch는 http://elasticsearch 로 접근이 가능한데, <br/>
+kibana docker image에서 기본 elasticsearch 주소는 http://elasticsearch:9200 으로 설정되어 있기 때문에 위와 같이 running 시키면 별다른 설정없이 통신이 가능합니다.<br/>
+apm-server에서도 elasticsearch:9200로 output host로 설정하였기 때문에, elasticsearch 서버와 서로 통신이 가능합니다.<br/>
+<br/>
+apm-server에 api 서버의 trasaction 정보를 업로드하기 위해 아래와 같이 elastic-apm-agent-1.10.0.jar 를 통해서 서버를 running 시키도록 합니다.<br/>
+
+<pre><code>java -javaagent:elastic-apm-agent-1.10.0.jar -Delastic.apm.service_name={api service name} -Delastic.apm.application_packages=org.shashaka.io -Delastic.apm.server_urls=http://{docker-machine ip}:8200/ -jar {jar-name}.jar
+</code></pre>
+
+위와 같이 호출하고 kibana에 접속하면 아래와 같이 api 서버의 정보가 있는 것을 확인할 수 있습니다.<br/>
+
+<span class="image left"><img src="{{ 'assets/images/apm.png' | relative_url }}" alt="" /></span>
+</p>

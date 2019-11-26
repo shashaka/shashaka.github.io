@@ -1,0 +1,77 @@
+---
+title: 리모컨  
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1107 <br/><br/>
+
+이번은 최적의 전략의 후보를 추린 후 모든 후보를 시도하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    private static int[] buttons = new int[10];
+
+    private static int currentChannel = 100;
+
+    public static void main(String args[]) {
+
+        Scanner sc = new Scanner(System.in);
+
+        int targetChannel = sc.nextInt();
+        int size = sc.nextInt();
+
+        for (int i = 0; i < size; i++) {
+            int val = sc.nextInt();
+            buttons[val] = 1;
+        }
+
+        int min = currentChannel - targetChannel;
+        if (min < 0) {
+            min *= -1;
+        }
+
+
+        int length = 0;
+        if (min == 0) {
+            System.out.println(min);
+        } else {
+            int diffMin = Integer.MAX_VALUE;
+            for (int i = 0; i < 1000000; i++) {
+                String val = String.valueOf(i);
+                if (isPossibleChannel(val)) {
+                    int diff = targetChannel - i;
+                    if (diff < 0) {
+                        diff *= -1;
+                    }
+                    if (diff < diffMin) {
+                        diffMin = diff;
+                        length = String.valueOf(i).length();
+                    }
+                }
+            }
+            System.out.println(Math.min(min, diffMin + length));
+        }
+
+    }
+
+    private static boolean isPossibleChannel(String val) {
+        for (int k = 0; k < val.length(); k++) {
+            if (buttons[Integer.parseInt(String.valueOf(val.charAt(k)))] == 1) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+}
+</code></pre>
+
+이번 문제에서는 가능한 채널 중에서 가장 목표 채널과 가까운 채널을 찾는 문제입니다.<br/>
+채널의 제한이 500,000 이므로 넉넉히 1000,000까지 수를 체크하는데 그 중에 현재 가지고 있는 button만으로 가능한 채널을 추린 후,가장 작은 차이가 나는 값을 찾아 정답을 return해주도록 합니다.<br/>
+
+</p>
+

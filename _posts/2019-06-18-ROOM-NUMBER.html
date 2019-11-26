@@ -1,0 +1,53 @@
+---
+title: 방 번호
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1475 <br/><br/>
+
+이번은 주어진 단어를 만들기 위한 규칙을 찾는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    private static double[] intArr = new double[10];
+
+    public static void main(String args[]) {
+
+        for (int i = 0; i < intArr.length; i++) {
+            intArr[i] = 0.0;
+        }
+
+        Scanner sc = new Scanner(System.in);
+
+        String value = sc.next();
+
+        for (int i = 0; i < value.length(); i++) {
+            if (value.charAt(i) == '9' || value.charAt(i) == '6') {
+                intArr[6] += 0.5;
+            } else {
+                intArr[Integer.parseInt(String.valueOf(value.charAt(i)))]++;
+            }
+        }
+
+        int max = 0;
+
+        for (int i = 0; i < intArr.length; i++) {
+            if (Math.round(intArr[i]) > max) {
+                max = (int) Math.round(intArr[i]);
+            }
+        }
+        System.out.println(max);
+    }
+}
+</code></pre>
+
+하나의 세트가 0~9까지 이루어져 있고, 9나 6은 서로 바꿔쓸 수 있기 때문에 하나의 글자가 두 개가 있다고 생각하여 풀면 됩니다.<br/>
+받은 숫자에 대해 각 array의 값을 계속 더해주는데, 9나 6은 서로 바꿔쓸 수 있기 때문에 0.5씩만 더해줍니다.<br/>
+모든 글자에 대해서 처리가 끝난 이후, 9나 6에 대해서는 0.5가 있을 수 있기 때문에 반올림을 해준 후 최대값을 구해 return 해줍니다.<br/>
+<br/>
+</p>
+

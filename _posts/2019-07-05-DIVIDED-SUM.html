@@ -1,0 +1,56 @@
+---
+title: 분해합    
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/2231 <br/><br/>
+
+이번은 모든 경우를 시도하여 N의 생성자를 구하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String args[]) {
+
+        Scanner sc = new Scanner(System.in);
+
+        String numStr = sc.next();
+
+        int num = Integer.parseInt(numStr);
+        int start = num - 9 * numStr.length();
+        if (start < 0) {
+            start = 0;
+        }
+
+        int ret = getRet(num, start);
+
+        System.out.println(ret);
+    }
+
+    private static int getRet(int num, int start) {
+        for (int i = start; i < num; i++) {
+            String val = String.valueOf(i);
+            int sum = i;
+            for (int k = 0; k < val.length(); k++) {
+                sum += Integer.parseInt(String.valueOf(val.charAt(k)));
+            }
+            if (sum == num) {
+                return i;
+            }
+        }
+        return 0;
+    }
+}
+</code></pre>
+
+이번은 모든 수를 대입하는 방식인 브루트포스를 이용해 문제를 풀어보도록 하겠습니다.<br/>
+분해합이란 본인의 수와 각자리의 수를 모두 합쳤을 때, 나오는 수로 정의되어 있습니다. (256(=245+2+4+5))<br/>
+가장 간단한 풀이는 0부터 시작해서 targetNum까지 모든 수를 체크해보면 되지만 시간을 줄이기 위해서,각자리수 *9 만큼부터 시작하도록 합니다.<br/>
+각자리의 최대 값은 9이고 각자리수만큼 더할 수 있으므로 분해합은 해당값보다 작을 수는 없습니다.<br/>
+하지만 여기서 해당 값이 0보다 작아지는 경우가 있으므로 해당 경우에는 start를 0으로 설정해주도록 합니다.<br/>
+
+</p>
+

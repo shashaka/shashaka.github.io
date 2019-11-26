@@ -1,0 +1,72 @@
+---
+title: 수 정렬하기
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/2750 <br/><br/>
+
+이번은 주어진 숫자를 정렬하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String args[]) {
+
+        Scanner sc = new Scanner(System.in);
+
+        int size = sc.nextInt();
+
+        int[] arr = new int[size];
+
+        for (int i = 0; i < size; i++) {
+            arr[i] = sc.nextInt();
+        }
+
+        qSort(arr, 0, arr.length - 1);
+
+        for (int value : arr) {
+            System.out.println(value + " ");
+        }
+    }
+
+    private static int getPartition(int[] arr, int start, int end) {
+        int pivot = arr[end];
+        int i = start - 1;
+
+        for (int k = start; k < end; k++) {
+            if (arr[k] < pivot) {
+                i++;
+
+                int temp = arr[i];
+                arr[i] = arr[k];
+                arr[k] = temp;
+            }
+        }
+
+        int temp = arr[i + 1];
+        arr[i + 1] = arr[end];
+        arr[end] = temp;
+        return i + 1;
+    }
+
+    private static void qSort(int[] arr, int start, int end) {
+        if (start < end) {
+            int partition = getPartition(arr, start, end);
+
+            qSort(arr, start, partition - 1);
+            qSort(arr, partition + 1, end);
+        }
+    }
+}
+</code></pre>
+
+이번 문제에서는 quick sort를 이용해 정렬해보도록 하겠습니다.<br/>
+quick sort는 array에서 가장 마지막 값을 pivot으로 정한 뒤, 각각의 크기에 상관없이 해당 pivot보다 작은 값은 왼쪽, 큰 값은 오른쪽으로 차례대로 몰아줍니다.<br/>
+마지막으로 가운데 값과 맨 끝값을 바꾸게 되면, 중간을 기준으로 왼쪽은 기준값보다 작은값의 모음, 오른쪽은 기준값보다 큰 값의 모음이 됩니다.<br/>
+이후 기준값을 기준으로 왼쪽, 오른쪽 배열을 나눠 다시 같은 방식으로 정렬해서 계속 반복하게 되면 모든 값이 정렬되게 됩니다.<br/>
+
+</p>
+

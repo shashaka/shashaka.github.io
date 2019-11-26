@@ -1,0 +1,96 @@
+---
+title: 체스판 다시 칠하기    
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1018 <br/><br/>
+
+이번은 체스판을 만드는 모든 경우를 시도하여 최적의 방법을 찾는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    private static char[][] mat;
+
+    public static void main(String args[]) {
+
+        Scanner sc = new Scanner(System.in);
+
+        int width = sc.nextInt();
+        int height = sc.nextInt();
+
+        mat = new char[width][height];
+
+        for (int i = 0; i < width; i++) {
+            String val = sc.next();
+            for (int k = 0; k < height; k++) {
+                mat[i][k] = val.charAt(k);
+            }
+        }
+
+        int min = Integer.MAX_VALUE;
+
+        for (int i = 0; i < width - 7; i++) {
+            for (int k = 0; k < height - 7; k++) {
+                int ret = getMin(i, k);
+                if (ret < min) {
+                    min = ret;
+                }
+            }
+        }
+        System.out.println(min);
+    }
+
+    private static int getMin(int widthStart, int heightStart) {
+        int min = Integer.MAX_VALUE;
+        int sum = 0;
+        for (int i = 0; i < 8; i++) {
+            for (int k = 0; k < 8; k++) {
+                if ((i + k) % 2 == 0) {
+                    if (mat[i + widthStart][k + heightStart] != 'B') {
+                        sum++;
+                    }
+                } else {
+                    if (mat[i + widthStart][k + heightStart] != 'W') {
+                        sum++;
+                    }
+                }
+            }
+        }
+
+        min = sum;
+
+        sum = 0;
+        for (int i = 0; i < 8; i++) {
+            for (int k = 0; k < 8; k++) {
+                if ((i + k) % 2 == 0) {
+                    if (mat[i + widthStart][k + heightStart] != 'W') {
+                        sum++;
+                    }
+                } else {
+                    if (mat[i + widthStart][k + heightStart] != 'B') {
+                        sum++;
+                    }
+                }
+            }
+        }
+
+        if (sum < min) {
+            min = sum;
+        }
+        return min;
+    }
+}
+</code></pre>
+
+이번은 전체를 반복하여 반복되는 모양인 체스판을 만드는 문제를 풀어보도록 하겠습니다.<br/>
+가장 위에 있는 값이 B 혹은 W로 반복되어야 하고, 두 칸에 하나씩 반복되는 모양이므로 아래와 같이 나타날 수 있습니다.<br/>
+처음이 (0,0)인 경우, (0,2),(0,4), 그다음 칸에서는 (1,1),(1,3)순으로 나타나게 됩니다.<br/>
+규칙을 보면 x,y이 합의 값이 모두 짝수인 것을 알 수 있습니다.<br/>
+해당 규칙으로 B,W를 번갈아가면서 체크하여 가장 작은 횟수를 구해줍니다.<br/>
+
+</p>
+

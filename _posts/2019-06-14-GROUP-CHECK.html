@@ -1,0 +1,63 @@
+---
+title: 그룹 단어 체커
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1316 <br/><br/>
+
+이번은 String에서 연속되지 않은 반복을 찾는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    private static Integer[] alphabetArry = new Integer[26];
+
+    public static void main(String args[]) {
+
+        Scanner scanner = new Scanner(System.in);
+
+        int size = scanner.nextInt();
+
+        int ret = 0;
+
+        for (int i = 0; i < size; i++) {
+
+            boolean isGroupNum = true;
+
+            for (int m = 0; m < 26; m++) {
+                alphabetArry[m] = 0;
+            }
+
+            String str = scanner.next();
+            char prev = '\n';
+
+            for (int k = 0; k < str.length(); k++) {
+                char curChar = str.charAt(k);
+                if (curChar != prev) {
+                    alphabetArry[curChar - 'a']++;
+                    prev = curChar;
+                    if (alphabetArry[curChar - 'a'] > 1) {
+                        isGroupNum = false;
+                        break;
+                    }
+                }
+            }
+            if (isGroupNum) {
+                ret++;
+            }
+        }
+
+        System.out.println(ret);
+    }
+}
+</code></pre>
+
+먼저 각 알파벳의 등장 횟수를 저장할 array를 생성하고,모두 0으로 초기화시켜주도록 합니다.<br/>
+이후, string의 char마다 바로 앞에 나왔던 char와 비교를 하여 같지 않으면 alphabetArry에서 1을 더해줍니다.<br/>
+이 때, alphabetArry가 1보다 큰 경우는 이미 한번 나오고 다시 띄어서 나온 경우이므로 ret에 더해주지 않습니다.<br/>
+위와 같은 방식으로 체크하여 ret을 return 해주도록 합니다.<br/>
+</p>
+

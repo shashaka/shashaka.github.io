@@ -1,0 +1,47 @@
+---
+title: Spring Redis Setting
+layout: post
+categories: springboot
+---
+
+<p>
+redis를 캐시 메모리를 사용하기 위해서 사용할 수 있는 다양한 java client가 있지만, 그 중에서 lettuce를 사용해보도록 하겠습니다.<br/>
+<br/>
+가장 먼저, 우리의 프로젝트에 아래와 같이 lettuce를 dependency로 추가해줍니다.<br/>
+
+<pre><code>compile group: 'biz.paluch.redis', name: 'lettuce', version: '4.4.0.Final'
+</code></pre>
+
+그리고 나서, 아래와 같이 redis client를 설정해주도록 합니다.<br/>
+
+<pre><code>@Configuration
+public class LettuceConfig {
+
+    @Bean(destroyMethod = "shutdown")
+    ClientResources clientResources() {
+        return DefaultClientResources.create();
+    }
+
+    @Bean(destroyMethod = "shutdown")
+    RedisClient redisClient(ClientResources clientResources) {
+        return RedisClient.create(clientResources, RedisURI.create("192.168.1.63", 6379));
+    }
+
+    @Bean(destroyMethod = "close")
+    StatefulRedisConnection<String, String> connection(RedisClient redisClient) {
+        return redisClient.connect();
+    }
+
+}
+</code></pre>
+
+redis client를 통해서, redis에 string을 입력한 이후, 아래와 같이 가져올 수 있습니다.<br/>
+
+<pre><code>2017-08-12 20:59:37.054  INFO 7564 --- [           main] s.b.c.e.t.TomcatEmbeddedServletContainer : Tomcat started on port(s): 8080 (http)
+2017-08-12 20:59:37.091  INFO 7564 --- [           main] org.blog.test.LettuceApplication         : result : Hello, Redis!
+2017-08-12 20:59:39.310  INFO 7564 --- [           main] org.blog.test.LettuceApplication         : Started LettuceApplication in 6.503 seconds (JVM running for 7.218)
+</code></pre>
+
+전체 예제는 아래 링크에서 다운로드 받을 수 있습니다.<br/>
+<br/>
+https://gitlab.com/shashaka/lettuce-redis-project </p>

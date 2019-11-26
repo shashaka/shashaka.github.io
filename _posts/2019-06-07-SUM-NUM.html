@@ -1,0 +1,37 @@
+---
+title: 숫자의 합
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/11720 <br/><br/>
+
+이번은 주어진 String의 숫자 연산 문제를 풀어보겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String args[]) {
+        Scanner scanner = new Scanner(System.in);
+        int size = scanner.nextInt();
+        String value = scanner.next();
+        int sum = 0;
+
+        for (int i = 0; i < size; i++) {
+            int num = Integer.parseInt(String.valueOf(value.charAt(i)));
+            sum += num;
+        }
+
+        System.out.println(sum);
+    }
+}
+</code></pre>
+
+숫자의 갯수를 scanner로 저장한 다음, 이어지는 값을 String으로 저장합니다.<br/>
+String의 각 자리수를 int로 저장해야 하기 때문에 char값을 Integer로 파싱합니다.<br/>
+이 때 parseInt로 사용하지 않고 그대로 자료형만 int로 바꾸게 되면 char의 int주소값으로 바뀌게 되니, 주의하도록 합니다.<br/>
+parsing한 값을 for문을 통해 모두 합쳐서 출력합니다.
+</p>
+

@@ -1,0 +1,23 @@
+---
+title: Custom Types
+layout: post
+categories: cassandra
+---
+
+<!-- Text stuff -->
+<p>
+사용자 정의 유형은 다음에 의해 정의됩니다 :<br/>
+
+<pre><code>custom_type ::=  string
+</code></pre>
+
+사용자 정의 유형은 서버 측 AbstractType 클래스를 확장하고 Cassandra가 로드할 수있는 Java 클래스의 이름을 포함하는 문자열입니다.<br/>
+(따라서 Cassandra를 실행하는 모든 노드의 CLASSPATH에 있어야합니다).<br/>
+이 클래스는 유형에 유효한 값과 클러스터링 컬럼에 사용될 때 시간 정렬 방법을 정의합니다.<br/>
+다른 목적을 위해, 커스텀 타입의 값은 blob의 값과 동일하며 특히 BLOB 리터럴 구문을 사용하여 입력 할 수 있습니다.<br/>
+<br/>
+
+출처 : http://cassandra.apache.org/doc/latest/cql/types.html  <br/>
+<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+</p>

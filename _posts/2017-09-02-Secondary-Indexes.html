@@ -1,0 +1,68 @@
+---
+title: Secondary Indexes
+layout: post
+categories: cassandra
+---
+
+<!-- Text stuff -->
+<p>
+CQL은 테이블에 대한 보조 인덱스 생성을 지원하므로 테이블에 대한 쿼리를 통해 해당 인덱스를 사용할 수 있습니다.<br/>
+보조 인덱스는 다음에 의해 정의 된 이름으로 식별됩니다.<br/>
+
+<pre><code>index_name ::=  re('[a-zA-Z_0-9]+')
+</code></pre>
+
+<br/>
+<h3>CREATE INDEX</h3>
+<br/>
+테이블에 보조 인덱스를 생성할 때는 CREATE INDEX 문을 사용합니다.<br/>
+
+<pre><code>create_index_statement ::=  CREATE [ CUSTOM ] INDEX [ IF NOT EXISTS ] [ index_name ]
+                                ON table_name '(' index_identifier ')'
+                                [ USING string [ WITH OPTIONS = map_literal ] ]
+index_identifier       ::=  column_name
+                           | ( KEYS | VALUES | ENTRIES | FULL ) '(' column_name ')'
+</code></pre>
+
+예를 들어 :<br/>
+
+<pre><code>CREATE INDEX userIndex ON NerdMovies (user);
+CREATE INDEX ON Mutants (abilityId);
+CREATE INDEX ON users (keys(favs));
+CREATE CUSTOM INDEX ON users (email) USING 'path.to.the.IndexClass';
+CREATE CUSTOM INDEX ON users (email) USING 'path.to.the.IndexClass' WITH OPTIONS = {'storage': '/mnt/ssd/indexes/'};
+</code></pre>
+
+CREATE INDEX 문은 주어진 테이블에서 주어진 칼럼에 대한 새로운 2차 인덱스를 작성하는 데 사용됩니다.<br/>
+원할 경우, ON 키워드 앞에 인덱스 자체의 이름을 지정할 수 있습니다.<br/>
+데이터가 이미 해당 열에 존재하면 비동기적으로 해당 데이터에 대해 인덱스가 적용됩니다.<br/>
+인덱스가 생성된 후 열에 대한 새 데이터는 삽입시 자동으로 인덱싱됩니다.<br/>
+<br/>
+IF NOT EXISTS 옵션을 사용하지 않으면 이미 존재하는 인덱스를 만들려고 하는 경우 오류가 반환됩니다.<br/>
+사용하는 경우, 인덱스가 이미 존재하면 명령문은 실행되지 않습니다.<br/>
+<br/>
+
+<h3>Indexes on Map Keys</h3>
+<br/>
+맵에 인덱스를 만들 때는 키 또는 값을 인덱싱 할 수 있습니다.<br/>
+열 식별자가 keys () 함수 내에 칼럼의 구분자가 있으면 인덱스가 맵 키에 있으므로 WHERE 절에 CONTAINS KEY를 사용할 수 있습니다.<br/>
+그렇지 않은 경우는 인덱스가 맵 값에 있게 됩니다.<br/>
+<br/>
+
+<h3>DROP INDEX</h3>
+<br/>
+보조 인덱스를 삭제할 때에는 DROP INDEX 문이 사용됩니다.<br/>
+
+<pre><code>drop_index_statement ::=  DROP INDEX [ IF EXISTS ] index_name
+</code></pre>
+
+DROP INDEX 문은 기존 보조 인덱스를 삭제할 때 사용됩니다.<br/>
+명령문의 인수는 인덱스 이름이며, 선택적으로 색인의 키 스페이스를 지정할 수 있습니다.<br/>
+<br/>
+인덱스가 존재하지 않으면 IF EXISTS가 사용되지 않는 한 명령문은 오류를 리턴합니다.<br/>
+사용되는 경우, 명령문은 실행되지 않습니다.<br/>
+<br/>
+출처 : http://cassandra.apache.org/doc/latest/cql/indexes.html<br/>
+<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+</p>

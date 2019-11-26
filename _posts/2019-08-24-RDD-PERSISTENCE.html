@@ -1,0 +1,85 @@
+---
+title: RDD Operations - RDD Persistence
+layout: post
+categories: spark
+---
+
+<p>
+Spark에서 가장 중요한 기능 중 하나는 여러 작업에서 전달하는 메모리의 데이터 집합을 유지(또는 캐싱)하는 것입니다.<br/>
+RDD의 결과값을 저장하면서, 각각의 노드는 다른 파티션의 메모리에서 계산된 내용을 저장하고 계산된 데이터 세트(혹은 데이터 세트로부터 파생된 값)에 대한 Actino이 수행될 때 그 값을 재사용합니다.<br/>
+이를 통해 향후 작업이 훨씬 빨라질 수 있습니다 (보통 10배 이상).<br/>
+캐싱은 반복 알고리즘과 빠른 대화식 사용을 위한 핵심 도구입니다.<br/>
+<br/>
+persist() 또는 cache() 메소드를 사용하여 해당 RDD가 메모리에 지속되도록 표시 할 수 있습니다.<br/>
+해당 값들은 Action에서 처음 계산 될 때 노드의 메모리에 유지됩니다.<br/>
+스파크의 캐시는 실패에 대한 대응이 되어있기 때문에, RDD의 파티션이 손실되면 원래 RDD를 생성한 변환을 사용하여 RDD가 자동으로 다시 계산됩니다.<br/>
+<br/>
+또한, 각 지속 RDD는 다른 스토리지 레벨을 사용하여 저장 될 수 있습니다.<br/>
+예를 들어, 디스크에 데이터 세트를 유지하거나, 메모리에 유지하지만 직렬화 된 Java 오브젝트(공간 절약을 위해)로 저장할 수 있으며, 여러 노드에 복제본을 저장할 수도 있습니다.<br/>
+이 수준은 StorageLevel 객체(Scala, Java, Python)를 persist()에 전달하여 설정됩니다.<br/>
+cache() 메서드는 기본 저장 설정인 StorageLevel.MEMORY_ONLY(직렬화되지 않은 개체를 메모리에 저장)를 사용하는 약어입니다.<br/>
+전체 스토리지 레벨 세트는 아래와 같습니다:<br/>
+<br/>
+* MEMORY_ONLY<br/>
+RDD를 직렬화되지않은 Java 오브젝트로 JVM에 저장합니다.<br/>
+RDD가 메모리 사이즈에 맞지 않으면 일부 파티션은 캐시되지 않으며 필요할 때마다 즉시 다시 계산됩니다.<br/>
+이것이 기본 설정입니다.<br/>
+<br/>
+* MEMORY_AND_DISK<br/>
+RDD를 직렬화되지않은 Java 오브젝트로 JVM에 저장합니다.<br/>
+RDD가 메모리 사이즈에 맞지 않으면 disk에 저장하게 되고, 필요할 때마다 읽어오게 됩니다.<br/>
+<br/>
+* MEMORY_ONLY_SER (Java and Scala)<br/>
+RDD를 직렬화된 Java 오브젝트 (파티션 당 1바이트 배열)로 저장합니다.<br/>
+이것은 일반적으로 빠른 serializer를 사용하는 경우 직렬화되지않은 객체보다 공간 효율성이 높습니다.<br/>
+하지만 읽기 작업에 CPU를 많이 사용합니다.<br/>
+<br/>
+* MEMORY_AND_DISK_SER (Java and Scala)<br/>
+MEMORY_ONLY_SER와 유사하지만 메모리 사이즈에 RDD가 맞지 않는 경우, 즉시 재계산을 하는 대신 disk에 저장해서 해당 값을 사용합니다.<br/>
+<br/>
+* DISK_ONLY<br/>
+RDD 파티션을 disk에만 저장합니다.<br/>
+<br/>
+* MEMORY_ONLY_2, MEMORY_AND_DISK_2, etc.<br/>
+위에 적힌 해당 레벨과 동작이 같지만 2개의 클러스터 노드에 복사본을 저장합니다.<br/>
+<br/>
+* OFF_HEAP (experimental)<br/>
+MEMORY_ONLY_SER 와 비슷하지만 data를 off-heap memory에 저장합니다.<br/>
+이 기능을 사용하려면 off-heap memory기능이 켜져있어야 합니다.<br/>
+<br/>
+Note: Python에서 저장된 객체는 항상 Pickle 라이브러리를 사용하여 직렬화되므로 직렬화된 수준을 선택하는지 여부는 중요하지 않습니다.<br/>
+Python에서 사용 가능한 스토리지 레벨은 MEMORY_ONLY, MEMORY_ONLY_2, MEMORY_AND_DISK, MEMORY_AND_DISK_2, DISK_ONLY 및 DISK_ONLY_2입니다.<br/>
+<br/>
+Spark는 사용자가 persist를 호출하지 않아도 셔플 작업(예 : reduceByKey)에서 일부 중간 데이터를 자동으로 유지합니다.<br/>
+이는 셔플 중 노드가 실패하는 경우 전체 입력을 다시 계산하지 않도록 하기위해 수행됩니다.<br/>
+RDD를 재사용하려는 경우 사용자는 persist를 호출하는 것이 좋습니다.<br/>
+<br/>
+<h3>Which Storage Level to Choose?</h3>
+<br/>
+Spark의 스토리지 수준은 메모리 사용량과 CPU 효율성 간에 균형을 제공하기위한 것입니다.<br/>
+우리는 다음 프로세스를 통해 하나를 선택하는 것을 추천합니다:<br/>
+<br/>
+- RDD가 기본 스토리지 레벨 (MEMORY_ONLY)에 편안하게 맞으면 그대로 두십시오.<br/>
+  이것은 가장 CPU 효율이 높은 옵션으로, RDD 작업을 최대한 빨리 실행할 수 있습니다.<br/>
+  <br/>
+- 그렇지 않은 경우 MEMORY_ONLY_SER를 사용하고 빠른 직렬화 라이브러리를 선택하십시오.<br/>
+  객체를 훨씬 공간 효율적으로 만들지만 여전히 액세스하기에는 빠릅니다.(자바와 스칼라)<br/>
+<br/>
+- 데이터 세트를 계산하는 작업이 비싸거나 많은 양의 데이터를 필터링하지 않는 한 디스크에 저장하지 마십시오.<br/>
+  그렇지 않으면 파티션을 다시 계산하는 것이 디스크에서 읽는 것보다 빠를 수 있습니다.<br/>
+  <br/>
+- 빠른 오류 복구를 원하는 경우(예 : Spark를 사용하여 웹 응용 프로그램의 요청을 처리하는 경우) 복제된 저장소 수준을 사용하십시오.<br/>
+  모든 스토리지 레벨은 손실된 데이터를 다시 계산하여 완전한 내결함성을 제공하지만 복제 된 스토리지 레벨을 사용하면 손실된 파티션을 다시 계산하기를 기다리지 않고 RDD에서 작업을 계속 실행할 수 있습니다.<br/>
+    <br/>
+<h3>Removing Data</h3>
+<br/>
+Spark는 각 노드의 캐시 사용량을 자동으로 모니터링하고 LRU(Least-Recently-Used) 방식으로 오래된 데이터 파티션을 삭제합니다.<br/>
+캐시에서 자동으로 삭제될 때까지 기다리지 않고 RDD를 수동으로 제거하려면 RDD.unpersist() 메소드를 사용하십시오.<br/>
+<br/>
+참조 : https://spark.apache.org/docs/2.1.1/programming-guide.html#rdd-persistence<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+
+
+
+</p>
+

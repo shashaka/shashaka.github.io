@@ -1,0 +1,41 @@
+---
+title: Creating Datasets
+layout: post
+categories: spark
+---
+
+<p>
+Spark SQL의 임시 뷰는 세션 범위이며 이를 생성하는 세션이 종료되면 사라집니다.<br/>
+모든 세션에서 공유되는 임시 뷰를 원하고 Spark 애플리케이션이 종료 될 때까지 활성 상태로 유지하려면 global temporary view를 작성할 수 있습니다.<br/>
+Global temporary view는 데이터베이스 global_temp에 연결되어 있으며 정규화된 이름을 사용하여 참조해야합니다 (예 : select * FROM global_temp.view1.)<br/>
+<br/>
+<pre><code>// Register the DataFrame as a global temporary view
+df.createGlobalTempView("people");
+
+// Global temporary view is tied to a system preserved database `global_temp`
+spark.sql("SELECT * FROM global_temp.people").show();
+// +----+-------+
+// | age|   name|
+// +----+-------+
+// |null|Michael|
+// |  30|   Andy|
+// |  19| Justin|
+// +----+-------+
+
+// Global temporary view is cross-session
+spark.newSession().sql("SELECT * FROM global_temp.people").show();
+// +----+-------+
+// | age|   name|
+// +----+-------+
+// |null|Michael|
+// |  30|   Andy|
+// |  19| Justin|
+// +----+-------+
+</code></pre>
+<br/>
+https://spark.apache.org/docs/latest/sql-getting-started.html#global-temporary-view
+<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+
+</p>
+

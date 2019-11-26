@@ -1,0 +1,81 @@
+---
+title: Async Method 테스트
+layout: post
+categories: springboot
+---
+
+<p>
+Spring에서 junit 테스트를 작성할 때, async method를 테스트하는 경우에 어려움을 가지게 됩니다.<br/>
+이 장에서는 test 실행 시, async task executor를 sync task executor로 변환해서 테스트하는 방법을 소개합니다.<br/>
+
+<pre><code>
+@Service
+@Slf4j
+public class TestServiceImpl implements TestService {
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Override
+    @Async
+    public void getString() {
+
+        log.info("start");
+        restTemplate.getForEntity("http://www.test.com", String.class);
+    }
+}
+</code></pre>
+위와 같이 선언된 async method를 테스트해보도록 합니다.<br/>
+<br/>
+<pre><code>
+@RunWith(SpringRunner.class)
+@SpringBootTest
+@Slf4j
+public class TestServiceTest {
+
+    @Configuration
+    @Import(AsyncTestApplication.class)
+    static class ContextConfiguration {
+        @Bean
+        @Primary
+        public Executor executor() {
+            return new SyncTaskExecutor();
+        }
+    }
+
+    @Autowired
+    private TestService testService;
+
+    @MockBean
+    private RestTemplate restTemplate;
+
+    @Test
+    public void testGetString() {
+
+        //given
+        given(restTemplate.getForEntity(anyString(), eq(String.class))).willReturn(new ResponseEntity<string>(HttpStatus.OK));
+
+        //when
+        testService.getString();
+
+        //then
+        verify(restTemplate, times(1)).getForEntity(anyString(), eq(String.class));
+    }
+}
+
+</code></pre>
+
+위와 같은 configuration 설정을 통해, junit test config 설정을 할 수 있습니다.<br/>
+해당 test 진행시, 전체 configuration을 설정하며 Executor를 syncTaskExecutor로 교체하게 됩니다.<br/>
+
+</p>
+<pre><code>
+2018-03-01 15:54:47.729  INFO 6836 --- [           main] o.b.test.service.impl.TestServiceImpl    : start
+</code></pre>
+
+테스트를 실행시, 위와 같이 테스트가 성공하는 것을 확인할 수 있습니다.<br/>
+
+<p>전체 예제는 아래 링크에서 다운로드 받을 수 있습니다.<br/>
+<br/>
+https://gitlab.com/shashaka/async-junit-test-project</p>
+

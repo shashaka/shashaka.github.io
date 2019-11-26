@@ -1,0 +1,37 @@
+---
+title: 벌집 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/2292 <br/><br/>
+
+이번은 반복되는 규칙을 찾는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String args[]) {
+
+        Scanner scanner = new Scanner(System.in);
+
+        int value = scanner.nextInt() - 1;
+
+        for (int i = 0; i < 1000000000; i++) {
+            value -= 6 * i;
+            if (value <= 0) {
+                System.out.println(i + 1);
+                break;
+            }
+        }
+    }
+}
+</code></pre>
+
+벌집의 규칙을 보면 1+ 6*(1+2+3+4+..)과 같이 각 레이어의 마지막 수가 증가하는 규칙을 찾을 수 있습니다.<br/>
+따라서, 입력에서 1을 뺀 후, 해당 값이 6*(x)에서 x가 1부터 차츰 증가하는 몇번째 수까지의 합인지를 찾으면 몇번재 레이어인지 판단할 수 있습니다.<br/>
+1 자체도 값을 1로 가지므로 구한 수에서 1을 더해 출력해줍니다.<br/>
+</p>
+

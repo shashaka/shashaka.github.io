@@ -1,0 +1,91 @@
+---
+title: 1로 만들기
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1463 <br/><br/>
+
+이번은 N을 1로 바꾸기 위해 주어진 연산을 몇 번 사용하는지 계산하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+int getRet();
+
+int arr_idx = 0;
+
+struct Node
+{
+	int data;
+	Node* prev;
+
+	Node* myAlloc(int data, Node* prev) {
+		this->data = data;
+		this->prev = prev;
+		return this;
+	}
+
+}a[5000000];
+
+
+Node* add(int data, Node* prev) {
+	return a[arr_idx++].myAlloc(data, prev);
+}
+
+Node* head;
+Node* nextHead;
+
+int main(void) {
+
+	int N;
+
+	scanf("%d", &N);
+
+	head = add(N, NULL);
+	nextHead = NULL;
+
+	printf("%d\n", getRet());
+
+	return 0;
+}
+
+int getRet()
+{
+	int count = 0;
+
+	while (true)
+	{
+		Node* node = head;
+		while (node != NULL)
+		{
+			if (node->data == 1)
+			{
+				return count;
+			}
+
+			if ((node->data % 3) == 0)
+			{
+				nextHead = add(node->data / 3, nextHead);
+			}
+			if ((node->data % 2) == 0)
+			{
+				nextHead = add(node->data / 2, nextHead);
+			}
+
+			nextHead = add(node->data - 1, nextHead);
+			node = node->prev;
+		}
+		head = nextHead;
+		nextHead = NULL;
+		count++;
+	}
+}
+</code></pre>
+
+문제에서 주어진 수로 3으로 나누거나 2로 나누거나 1을 빼주는 작업을 반복하여서 가장 빨리 끝나는 횟수를 찾으면 됩니다.<br/>
+각각의 작업을 주어진 수에 대해 모두 해주고 나오는 값을 list로 저장해주도록 합니다.<br/>
+그리고 또다시 그 list에 대해서 작업을 반복해주어 1이 나오면 해당 count를 return 해줍니다.<br/>
+
+</p>
+

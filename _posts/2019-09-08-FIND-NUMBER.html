@@ -1,0 +1,106 @@
+---
+title: 수 찾기   
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1920 <br/><br/>
+
+배열을 정렬한 후 이분 탐색으로 값을 찾는 문제를 풀어보도록 하겠습니다.<br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+void quickSort(int arr[], int low, int high);
+int binarySearch(int* arr, int L, int R, int val);
+
+int main(void) {
+
+	int N;
+
+	scanf("%d", &N);
+	int* arr = new int[N];
+
+	for (int i = 0; i < N; i++)
+	{
+		scanf("%d", &arr[i]);
+	}
+
+	quickSort(arr, 0, N - 1);
+
+	int count, val;
+	scanf("%d", &count);
+
+	for (int i = 0; i < count; i++)
+	{
+		scanf("%d", &val);
+		printf("%d\n", binarySearch(arr, 0, N - 1, val));
+	}
+
+
+	return 0;
+}
+
+int binarySearch(int* arr, int L, int R, int val) {
+
+	if (R >= L)
+	{
+		int mid = L + (R - L) / 2;
+
+		if (arr[mid] == val)
+		{
+			return 1;
+		}
+
+		if (arr[mid] > val)
+		{
+			return binarySearch(arr, L, mid - 1, val);
+		}
+		return binarySearch(arr, mid + 1, R, val);
+	}
+	return 0;
+}
+
+void swap(int* a, int* b)
+{
+	int t = *a;
+	*a = *b;
+	*b = t;
+}
+
+int partition(int arr[], int low, int high)
+{
+	int pivot = arr[high];
+	int i = (low - 1);
+
+	for (int j = low; j <= high - 1; j++)
+	{
+		if (arr[j] < pivot)
+		{
+			i++;
+			swap(&arr[i], &arr[j]);
+		}
+	}
+	swap(&arr[i + 1], &arr[high]);
+	return (i + 1);
+}
+
+void quickSort(int arr[], int low, int high)
+{
+	if (low < high)
+	{
+
+		int pi = partition(arr, low, high);
+
+		quickSort(arr, low, pi - 1);
+		quickSort(arr, pi + 1, high);
+	}
+}
+</code></pre>
+
+이분 탐색으로 값을 찾는 문제를 풀어보도록 하겠습니다.<br/>
+우선 받은 값을 arr에 저장 후, quickSort로 배열을 정렬해주도록 합니다.<br/>
+이에 이분 탐색으로 해당 값이 있는지 찾아주도록 합니다.<br/>
+<br/>
+</p>
+

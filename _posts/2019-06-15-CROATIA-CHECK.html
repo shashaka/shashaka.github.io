@@ -1,0 +1,37 @@
+---
+title: 크로아티아 알파벳
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/2941 <br/><br/>
+
+이번은 규칙에 맞는 알파벳의 수를 찾는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    private static String[] croatiaAlphabet = {"c=", "c-", "dz=", "d-", "lj", "nj", "s=", "z="};
+
+    public static void main(String args[]) {
+
+        Scanner scanner = new Scanner(System.in);
+        String str = scanner.next();
+
+        for (int i = 0; i < croatiaAlphabet.length; i++) {
+            str = str.replaceAll(croatiaAlphabet[i], "A");
+        }
+
+        System.out.println(str.length());
+    }
+}
+</code></pre>
+
+먼저 크로아티아 알파벳을 array로 저장해줍니다.<br/>
+그 후, str을 받아 대응하는 알파벳이 있으면 모두 대문자 A로 변환합니다.<br/>
+str은 모두 소문자와 -,=로만 이루어져 있으므로 대문자 A는 글자 하나의 갯수로 체크되게 됩니다.<br/>
+마지막으로 str의 length를 출력해주면 됩니다.<br/>
+</p>
+

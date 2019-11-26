@@ -1,0 +1,83 @@
+---
+title: 행렬 곱셈 순서 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/11049 <br/><br/>
+
+이번은 행렬을 곱하는 최소 비용을 구하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+#define MAX_NUM 2147483647
+
+static int** arr;
+static int** cache;
+
+int multiplyVal(int start, int end);
+
+int main(void) {
+
+	int N;
+
+	scanf("%d", &N);
+
+	cache = new int*[N + 1];
+	for (int i = 0; i < N + 1; i++)
+	{
+		cache[i] = new int[N + 1];
+		for (int k = 0; k < N + 1; k++)
+		{
+			cache[i][k] = -1;
+		}
+	}
+
+	arr = new int*[N];
+	for (int i = 0; i < N; i++)
+	{
+		arr[i] = new int[2];
+		scanf("%d %d", &arr[i][0], &arr[i][1]);
+	}
+
+	printf("%d\n", multiplyVal(0, N - 1));
+
+	return 0;
+}
+
+int multiplyVal(int start, int end) {
+	if (start == end)
+	{
+		return 0;
+	}
+
+	if (cache[start][end] != -1)
+	{
+		return cache[start][end];
+	}
+
+	cache[start][end] = MAX_NUM;
+
+	for (int i = start; i < end; i++)
+	{
+		int val = multiplyVal(start, i) + multiplyVal(i + 1, end) + arr[start][0] * arr[i][1] * arr[end][1];
+		if (val < cache[start][end])
+		{
+			cache[start][end] = val;
+		}
+	}
+
+	return cache[start][end];
+}
+</code></pre>
+
+두개 이상의 행렬을 통해 나오는 곱셈 연산 최소값을 f(x)라고 하면, 두개 이상의 행렬로 만들어진 또 하나의 합쳐진 행렬 f(y)에 대해서 두 행렬을 곱한다면 아래와 같습니다.<br/>
+f(x) + f(y) + f(xy)<br/>
+여기서 f(x)는 해당 행렬을 만드는 데 드는 최소한의 곱, f(y)는 해당 행렬을 만드는데 드는 최소한의 곱,<br/>
+f(xy)는 해당 두 행렬을 하나로 합치는데 드는 최소한의 곱입니다.<br/>
+전체 행렬의 길이만큼 for문을 통해 체크하며 최소값을 return해주도록 합니다.<br/>
+
+<br/>
+</p>
+

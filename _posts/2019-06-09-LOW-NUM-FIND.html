@@ -1,0 +1,45 @@
+---
+title: X보다 작은 수
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/10871 <br/><br/>
+
+이번은 주어진 수보다 작은 수를 출력하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.io.*;
+
+public class Main {
+
+    public static void main(String args[]) throws IOException {
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out));
+
+        String input = reader.readLine();
+        String[] values = reader.readLine().split(" ");
+
+        Integer size = Integer.parseInt(input.split(" ")[0]);
+        Integer limit = Integer.parseInt(input.split(" ")[1]);
+
+        for (int i = 0; i < size; i++) {
+            if (Integer.parseInt(values[i]) < limit) {
+                writer.write(values[i] + " ");
+            }
+        }
+
+        writer.flush();
+
+        reader.close();
+        writer.close();
+    }
+}
+</code></pre>
+
+시간 제한이 1초이므로 빠른 속도를 위해서 BufferedReader와 BufferedWriter를 사용하도록 합니다.<br/>
+먼저 입력을 받아 비교할 값의 갯수와 기준이 되는 수를 저장합니다.<br/>
+이후, 해당 기준 값과 주어진 값을 비교하여 BufferedReader를 사용해 출력해주도록 합니다.<br/>
+</p>
+

@@ -1,0 +1,42 @@
+---
+title: Spring bootJar 설정
+layout: post
+categories: springboot
+---
+
+<p>
+SpringBoot에서 gradle plugin을 이용해 executable jar를 만드는 설정입니다.<br/>
+<br/>
+- build.gradle<br/>
+<br/>
+<pre><code>plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.1.8.RELEASE'
+}
+
+bootJar {
+    mainClassName = 'org.shashaka.io.ApiApplication'
+}
+
+group 'org.shashaka.io'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.1.8.RELEASE'
+    testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.1.8.RELEASE'
+}
+
+</code></pre>
+<br/>
+build.gradle 파일에 위와 같이 설정해주도록 합니다.<br/>
+중요한 부분은 plugin에 spring boot 추가와 bootJar 부분을 설정해주는 것입니다.<br/>
+위와 같이 설정하고, gradle bootJar를 실행하면 실행 가능한 jar가 생성되는 것을 볼 수 있습니다.<br/>
+<br/>
+전체 예제는 아래 링크에서 다운로드 가능합니다.<br/>
+<br/>
+https://gitlab.com/shashaka/api </p>

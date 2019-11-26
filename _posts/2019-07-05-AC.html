@@ -1,0 +1,150 @@
+---
+title: AC   
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/5430 <br/><br/>
+
+이번은 덱을 활용하여 시간복잡도를 향상시키는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import sun.awt.image.BufferedImageDevice;
+
+import java.util.Scanner;
+
+public class Main {
+
+    private static Node head;
+
+    private static Node tail;
+
+    private static boolean forward;
+
+    public static void main(String args[]) {
+
+        Scanner sc = new Scanner(System.in);
+
+        int size = sc.nextInt();
+
+        for (int i = 0; i < size; i++) {
+
+            head = tail = null;
+            forward = true;
+
+            String command = sc.next();
+            int arrSize = sc.nextInt();
+            String arrStr = sc.next();
+            String[] arr = arrStr.substring(1, arrStr.length() - 1).split(",");
+
+            for (int k = 0; k < arrSize; k++) {
+                addLast(arr[k]);
+            }
+
+            String ret = solve(command);
+
+            System.out.println(ret);
+        }
+    }
+
+    private static void addLast(String val) {
+        if (head == null) {
+            head = tail = new Node(val);
+            head.prev = head;
+            head.next = head;
+        } else {
+            Node node = new Node(val);
+            node.prev = tail;
+            node.next = head;
+            tail.next = node;
+            head.prev = node;
+
+            tail = node;
+        }
+    }
+
+    private static String solve(String command) {
+        for (int i = 0; i < command.length(); i++) {
+            switch (command.charAt(i)) {
+                case 'R':
+                    forward = !forward;
+                    break;
+                case 'D':
+                    if (forward) {
+                        if (head != null) {
+                            Node node = head;
+                            node.prev.next = node.next;
+                            node.next.prev = node.prev;
+                            head = node.next;
+                            if (head == node) {
+                                head = null;
+                            }
+                        } else {
+                            return "error";
+                        }
+                    } else {
+                        if (tail != null) {
+                            Node node = tail;
+                            node.prev.next = node.next;
+                            node.next.prev = node.prev;
+                            tail = node.prev;
+                            if (tail == node) {
+                                tail = null;
+                            }
+                        } else {
+                            return "error";
+                        }
+                    }
+                    break;
+            }
+        }
+        StringBuilder builder = new StringBuilder();
+        builder.append("[");
+        if (forward) {
+            Node node = head;
+            while (node != null) {
+                builder.append(node.data);
+                if (node == tail) {
+                    break;
+                }
+                builder.append(",");
+                node = node.next;
+            }
+        } else {
+            Node node = tail;
+            while (node != null) {
+                builder.append(node.data);
+                if (node == head) {
+                    break;
+                }
+                builder.append(",");
+                node = node.prev;
+            }
+        }
+        builder.append("]");
+
+
+        return builder.toString();
+    }
+}
+
+class Node {
+    String data;
+    Node prev;
+    Node next;
+
+    Node(String data) {
+        this.data = data;
+    }
+}
+</code></pre>
+
+이번에는 양쪽으로 이동이 가능한 원모양의 큐를 이용해 문제를 풀어보도록 하겠습니다.<br/>
+먼저 head와 tail을 선언해주고, tail.next = head, head.prev = tail 로 선언해주어 원모양의 큐로 만들어줍니다.<br/>
+원모양으로 만드는 이유는 null 체크를 따로 해주지 않기 위해서입니다.<br/>
+커맨드 R의 경우는 forward를 설정해주어 현재 정방향으로 가는지, 역방향으로 가는지 표시를 해줍니다.<br/>
+커맨드 D의 경우는 forward로 표시된 방향에 따라 정방향인 경우는 head부터 삭제, 역방향인 경우는 tail부터 삭제를 진행합니다.<br/>
+결과를 return할 때에도 역시 정방향인 경우는 head부터, 역방향인 경우는 tail부터 출력해줍니다.<br/>
+
+</p>
+

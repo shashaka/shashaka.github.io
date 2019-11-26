@@ -1,0 +1,66 @@
+---
+title: JSON Support
+layout: post
+categories: cassandra
+---
+
+<!-- Text stuff -->
+<p>
+Cassandra 2.2에서는 SELECT 및 INSERT 문에 대한 JSON 지원이 도입되었습니다.<br/>
+이 지원은 CQL API를 근본적으로 변경하지 않습니다.(예 : 스키마가 여전히 적용됨).<br/>
+또한, JSON 문서를 사용하여 편리하게 작업 할 수 있습니다.<br/>
+<br/>
+
+<h3>SELECT JSON</h3>
+<br/>
+SELECT 문을 사용하면 JSON 키워드를 사용하여 각 행을 단일 JSON 인코딩 된 맵으로 반환 할 수 있습니다.<br/>
+SELECT 문 동작의 나머지 부분은 동일합니다.<br/>
+<br/>
+결과의 맵 키는 일반적인 결과로 리턴되는 세트의 column 이름과 동일합니다.<br/>
+예를 들어, SELECT JSON a, ttl (b) FROM ...과 같은 명령문은 "a"및 "ttl (b)" 키가 있는 맵을 생성합니다.<br/>
+그러나 여기에는 주목할만한 예외가 존재합니다. <br/>
+INSERT JSON 동작을 사용한 경우 대문자가있는 대 / 소문자를 구분하는 열 ​​이름은 큰 따옴표로 묶여서 결과로 리턴되게 됩니다.<br/>
+예를 들어 SELECT JSON myColumn FROM ...은 "\"myColumn \ ""(이스케이프 된 따옴표에 유의하십시오.) 맵 키를 생성합니다.<br/>
+<br/>
+맵 값은 결과 세트 값의 JSON 형태로 인코딩된 표현으로 나타납니다.<br/>
+<br/>
+
+<h3>INSERT JSON</h3>
+<br/>
+INSERT 문을 사용하면 새로운 JSON 키워드를 사용하여 JSON 인코딩 된 맵을 단일 행으로 삽입 할 수 있습니다.<br/>
+JSON 맵의 형식은 일반적으로 동일한 테이블의 SELECT JSON 문에서 반환하는 형식과 일치해야합니다.<br/>
+특별한 경우로, 대소 문자를 구분하는 열 ​​이름은 큰 따옴표로 묶어야합니다.<br/>
+예를 들어 "myKey"및 "value"라는 두 개의 열이있는 테이블에 삽입하려면 다음을 수행합니다 : <br/>
+
+<pre><code>INSERT INTO mytable JSON '{ "\"myKey\"": 0, "value": 0}'
+</code></pre>
+
+기본적으로 (또는 DEFAULT NULL이 명시 적으로 사용되는 경우) JSON 맵에서 생략 된 열은 NULL로 설정됩니다. 즉, 해당 열의 기존 값이 제거되므로 삭제 표시가 작성됩니다.<br/>
+또는 값 뒤에 DEFAULT UNSET 지시문을 사용하면 생략 된 열 값이 설정되지 않은 채로 남아 있습니다. 즉, 해당 열의 기존 값이 보존됩니다.<br/>
+<br/>
+
+<h3>JSON Encoding of Cassandra Data Types</h3>
+<br/>
+가능한 경우 Cassandra는 기본 JSON 표현으로 데이터 유형을 나타내고 수용합니다.<br/>
+또한 Cassandra는 모든 단일 필드 유형에 대해 CQL 리터럴 형식과 일치하는 문자열 표현을 허용합니다.<br/>
+예를 들어, float, ints, UUID 및 날짜는 CQL 리터럴 문자열로 나타낼 수 있습니다.<br/>
+그러나 컬렉션, 튜플 및 사용자 정의 유형과 같은 복합 유형은 기본 JSON 모음 (maps and lists) 또는 JSON으로 인코딩 된 모음의 문자열 표현으로 나타내야합니다.<br/>
+<br/>
+
+<h3>The fromJson() Function</h3>
+<br/>
+fromJson () 함수는 INSERT JSON과 유사하지만, 단일 열 값에 사용할 수 있습니다.<br/>
+INSERT.의 VALUES 절 또는 UPDATE, DELETE 또는 SELECT의 column value 중 하나로서만 사용될 수 있습니다.<br/>
+예를 들어, SELECT의 선택 절에서 사용될 수 없습니다.<br/>
+<br/>
+
+<h3>The toJson() Function</h3>
+<br/>
+toJson () 함수는 SELECT JSON과 유사하게 사용될 수 있지만, 단일 열 값에 사용할 수 있습니다.<br/>
+SELECT 문의 선택 절에서만 사용할 수 있습니다.<br/>
+<br/>
+
+출처 : http://cassandra.apache.org/doc/latest/cql/json.html<br/>
+<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+</p>

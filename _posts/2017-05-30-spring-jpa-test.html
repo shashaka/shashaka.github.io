@@ -1,0 +1,65 @@
+---
+title: Spring Data JPA Test
+layout: post
+categories: springboot
+---
+
+<p>
+스프링 부트를 활용하여, 실제 서버에서 만든 jpa junit test를 작성할 수 있습니다. <br/>
+스프링 부트에서는 이 기능을 너무나도 간단하게 만들어놓아서, 전혀 부담없이 아래 예제를 따라하시면 가능합니다.<br/>
+<br/>
+jpa junit test를 위해서는 아래와 같이 @DataJpaTest 를 선언하고, spring boot에서 제공하는 TestEntityManager를 사용하여, test data를 생성할 수 있습니다.<br/>
+그 후, 실제 개발자가 만든 method를 실행시켜 기대하는 값이 나오는지 확인하는 과정을 거치면 됩니다.<br/>
+
+<pre><code>package org.blog.test.jpatest.repository;
+
+import org.blog.test.jpatest.entity.TestTable;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.List;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+@RunWith(SpringRunner.class)
+@DataJpaTest
+public class TestTableRepositoryTest {
+    @Autowired
+    private TestEntityManager testEntityManager;
+
+    @Autowired
+    private TestTableRepository testRepository;
+
+    @Test
+    public void findByName() {
+        //Given
+        TestTable testTable = new TestTable("test");
+        this.testEntityManager.persist(testTable);
+
+        //When
+        List<testtable> result = testRepository.findByName("test");
+
+        //Then
+        assertThat(result.get(0), is(testTable));
+    }
+}
+</code></pre>
+
+아래에서 작성한 test case가 통과한 것을 확인할 수 있습니다.<br/>
+<br/>
+- 실행 결과<br/>
+
+<pre><code>Hibernate: insert into test_table (id, name) values (null, ?)
+2017-05-30 23:28:50.605  INFO 11808 --- [           main] o.h.h.i.QueryTranslatorFactoryInitiator  : HHH000397: Using ASTQueryTranslatorFactory
+Hibernate: select testtable0_.id as id1_0_, testtable0_.name as name2_0_ from test_table testtable0_ where testtable0_.name=?
+2017-05-30 23:28:50.903  INFO 11808 --- [           main] o.s.t.c.transaction.TransactionContext   : Rolled back transaction for test context [DefaultTestContext@2ed0fbae testClass = TestTableRepositoryTest, testInstance = org.blog.test.jpatest.repository.TestTableRepositoryTest@780cb77, testMethod = findByName@TestTableRepositoryTest, testException = [null], mergedContextConfiguration = [MergedContextConfiguration@212bf671 testClass = TestTableRepositoryTest, locations = '{}', classes = '{class org.blog.test.JpaTestApplication}', contextInitializerClasses = '[]', activeProfiles = '{}', propertySourceLocations = '{}', propertySourceProperties = '{org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true}', contextCustomizers = set[org.springframework.boot.test.context.ImportsContextCustomizer@82b1d917, org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@1f36e637, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.autoconfigure.OverrideAutoConfigurationContextCustomizerFactory$DisableAutoConfigurationContextCustomizer@68bbe345, org.springframework.boot.test.autoconfigure.filter.TypeExcludeFiltersContextCustomizer@1e88b3c, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@88c04a62], contextLoader = 'org.springframework.boot.test.context.SpringBootContextLoader', parent = [null]]].
+</code></pre>
+
+전체 예제는 아래에서 다운로드 받을 수 있습니다.<br/>
+<br/>
+https://gitlab.com/shashaka/jpa-test-project </p>

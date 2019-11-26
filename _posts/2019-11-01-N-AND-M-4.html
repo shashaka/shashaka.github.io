@@ -1,0 +1,51 @@
+---
+title: N과 M (4) 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/15652 <br/><br/>
+
+이번은 백트래킹 입문 문제 4를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+static int N, M;
+int* arr;
+int visit[9] = { 0 };
+void resolve(int start,int count);
+
+int main(void) {
+	scanf("%d %d", &N, &M);
+	arr = new int[M];
+	resolve(1,0);
+}
+
+void resolve(int start, int count) {
+
+	if (count == M){
+		for (int i = 0; i < M; i++)
+		{
+			printf("%d ", arr[i]);
+		}
+		printf("\n");
+
+		return;
+	}
+
+	for (int i = start; i <= N; i++)
+	{
+		arr[count] = i;
+		resolve(i, count + 1);
+	}
+}
+</code></pre>
+
+문제만 읽어보면, 해당 규칙을 이해하기 어렵지만, 예시를 보게 되면 금방 이해가 되는 문제입니다.<br/>
+한 줄 기준으로 보면, 각 줄마다 앞에 나온 숫자를 기점으로 출력이 가능합니다.<br/>
+바로 앞 숫자가 1이라면 1부터, 2라면 2부터 가능해지는 것입니다.<br/>
+해당 규칙에 따라, 해당 수열의 길이만큼 반복해주고 출력을 해주도록 합니다.<br/>
+<br/>
+</p>
+

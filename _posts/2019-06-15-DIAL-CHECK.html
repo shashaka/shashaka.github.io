@@ -1,0 +1,39 @@
+---
+title: 다이얼
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/5622 <br/><br/>
+
+이번은 규칙에 따라 문자에 대응하는 수를 찾는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    private static int[] dialArr = {3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 10, 10, 10, 10};
+
+    public static void main(String args[]) {
+
+        Scanner scanner = new Scanner(System.in);
+        String str = scanner.next();
+
+        int sum = 0;
+
+        for (int i = 0; i < str.length(); i++) {
+            char strChar = str.charAt(i);
+            sum += dialArr[strChar - 'A'];
+        }
+        System.out.println(sum);
+
+    }
+}
+</code></pre>
+
+먼저 각 알파벳에 따라 다이얼을 거는데에 걸리는 시간을 알파벳에 맞게 array로 저장해줍니다.<br/>
+1이 2만큼 걸렸으므로, 각 수에 대해 +1을 한 값을 저장해주면 됩니다.<br/>
+이후 값을 string으로 받고 각 수에 대해서 모든 수를 저장해주면 가능합니다.<br/>
+</p>
+

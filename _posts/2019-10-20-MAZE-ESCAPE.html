@@ -1,0 +1,114 @@
+---
+title: 미로 탐색 
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/2178 <br/><br/>
+
+이번은 BFS로 최단경로를 찾는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+static int X, Y, count = 1;
+static int** mat;
+
+
+int head = 0;
+int tail = 0;
+const int arr_size = 10001;
+struct Node
+{
+	int x, y;
+	Node* myAlloc(int x, int y) {
+		this->x = x;
+		this->y = y;
+		return this;
+	}
+}a[arr_size];
+
+void add(int x, int y) {
+	if (tail >= arr_size)
+	{
+		tail -= arr_size;
+	}
+	a[tail++].myAlloc(x, y);
+}
+
+Node* pull() {
+	if (head == tail)
+	{
+		return NULL;
+	}
+	if (head >= arr_size)
+	{
+		head -= arr_size;
+	}
+	return &a[head++];
+}
+
+void bfs();
+
+int main(void) {
+
+	scanf("%d %d", &X, &Y);
+
+	mat = new int*[X];
+	for (int i = 0; i < X; i++)
+	{
+		mat[i] = new int[Y];
+		for (int k = 0; k < Y; k++)
+		{
+			scanf("%1d", &mat[i][k]);
+		}
+	}
+
+	add(0, 0);
+
+	bfs();
+
+	printf("%d", mat[X-1][Y-1]);
+}
+
+void resolve(int x, int y, int val) {
+	if (x < 0 || y < 0 || x >= X || y >= Y)
+	{
+		return;
+	}
+
+	if (mat[x][y] != 1)
+	{
+		return;
+	}
+
+	mat[x][y] = val;
+
+	add(x, y);
+}
+
+void bfs() {
+
+	Node* node = pull();
+
+	while (node != NULL)
+	{
+		resolve(node->x - 1, node->y, mat[node->x][node->y] + 1);
+		resolve(node->x + 1, node->y, mat[node->x][node->y] + 1);
+		resolve(node->x, node->y - 1, mat[node->x][node->y] + 1);
+		resolve(node->x, node->y + 1, mat[node->x][node->y] + 1);
+
+		node = pull();
+	}
+}
+</code></pre>
+
+먼저 Node를 선언하여, Circullar Queue를 생성하여 줍니다.<br/>
+이후, queue에 (0,0)을 넣고, queue에 있는 값 중에서 주변 값이 1이면, 해당 값을 현재 값보다 1을 더해줍니다.<br/>
+그렇게 되면, 현재 가운데 값이 1인 경우, 상하좌우에 있는 1인 값을 가지고 있는 칸은 모두 2로 바뀌게 됩니다.<br/>
+만약, 값을 바꾸려는 칸의 값이 1이 아닌 경우는 이미 다른 최단 경로를 통해 올 수 있으므로 값을 바꾸지 않고 넘어갑니다.<br/>
+값을 바꾼 칸은 해당 칸을 기준으로 상하좌우 값을 또 바꿔야 하니, queue에 넣어줍니다.<br/>
+해당 로직에 따라 queue에 값이 없을 때까지 반복하면 마지막 칸까지 값이 채워지게 됩니다.<br/>
+마지막으로 마지막 칸의 값을 출력해주도록 합니다.<br/>
+</p>
+

@@ -1,0 +1,27 @@
+---
+title: DROP KEYSPACE
+layout: post
+categories: cassandra
+---
+
+<!-- Text stuff -->
+<p>
+키 스페이스를 삭제하는 것은 DROP KEYSPACE 문을 사용하여 수행 할 수 있습니다.<br/>
+
+<pre><code>drop_keyspace_statement ::=  DROP KEYSPACE [ IF EXISTS ] keyspace_name
+</code></pre>
+
+예를 들어 :<br/>
+<br/>
+<pre><code>DROP KEYSPACE Excelsior;
+</code></pre>
+
+키 스페이스를 삭제하면 모든 테이블, UTD 및 그 안에있는 함수 및 해당 테이블에 포함 된 모든 데이터를 포함하여 해당 키 스페이스를 되돌릴 수 없게 즉시 제거됩니다.<br/>
+<br/>
+키 스페이스가 없으면 IF EXISTS가 사용되지 않는 한 명령문은 오류를 반환합니다.<br/>
+IF EXISTS가 사용되는 경우에는 아무 작업도하지 않습니다.<br/>
+<br/>
+출처 : http://cassandra.apache.org/doc/latest/cql/ddl.html  <br/>
+<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+</p>

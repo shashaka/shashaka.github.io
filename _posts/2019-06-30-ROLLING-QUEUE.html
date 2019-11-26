@@ -1,0 +1,93 @@
+---
+title: 회전하는 큐  
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1021 <br/><br/>
+
+이번은 덱을 활용하여 큐를 회전시키는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    private static Node head;
+
+    public static void main(String args[]) {
+
+        Scanner sc = new Scanner(System.in);
+
+        int N = sc.nextInt();
+        int size = sc.nextInt();
+
+        for (int i = 1; i <= N; i++) {
+            add(i);
+        }
+
+        Node node = head;
+        int count = 0;
+        for (int i = 0; i < size; i++) {
+            int val = sc.nextInt();
+
+            Node preNode = node;
+            Node nextNode = node;
+            while (true) {
+                if (preNode.data == val) {
+                    preNode.prev.next = preNode.next;
+                    preNode.next.prev = preNode.prev;
+                    preNode = preNode.next;
+                    node = preNode;
+                    break;
+                }
+                if (nextNode.data == val) {
+                    nextNode.prev.next = nextNode.next;
+                    nextNode.next.prev = nextNode.prev;
+                    nextNode = nextNode.next;
+                    node = nextNode;
+                    break;
+                }
+
+                preNode = preNode.prev;
+                nextNode = nextNode.next;
+                count++;
+            }
+        }
+        System.out.println(count);
+    }
+
+    private static void add(int data) {
+        Node node = new Node(data);
+        if (head == null) {
+            head = node;
+            head.prev = node;
+            head.next = node;
+        } else {
+            node.prev = head.prev;
+            node.next = head;
+            head.prev.next = node;
+            head.prev = node;
+        }
+    }
+}
+
+class Node {
+    int data;
+    Node prev;
+    Node next;
+
+    Node(int data) {
+        this.data = data;
+    }
+}
+</code></pre>
+
+이번에는 양쪽으로 이동이 가능한 원모양의 큐를 이용해 문제를 풀어보도록 하겠습니다.<br/>
+양쪽 이동이 가능하여야 하므로 Node는 prev,next를 갖게 되고 앞으로 이동시에는 prev, 뒤로 이동시에는 next로 이동시켜 줍니다.<br/>
+node가 빠지는 경우에는 next로 이동하는 것으로 규칙이 선언되어있으므로 prev, next로 이동하는 경우 모두 삭제시에는 next로 이동시켜주도록 합니다.<br/>
+현재의 node에서 앞, 뒤 동시로 이동시켜 빨리 끝나는 값으로 count를 더해주고, 해당 node를 공통 node로 다시 선언해줍니다.<br/>
+이후, 반복되는 수만큼 prevNode, nextNode를 각각 이동시켜 count를 모두 더해주도록 합니다.<br/>
+
+</p>
+

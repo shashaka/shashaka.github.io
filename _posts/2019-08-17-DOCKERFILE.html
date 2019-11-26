@@ -1,0 +1,36 @@
+---
+title: DockerFile 설정
+layout: post
+categories: blog
+---
+
+<p>
+Docker에서 ubuntu 최신 버전을 이용해, 각종 설치를 진행하는 예제입니다.<br/>
+아래 예제에서는 java8 및 kafka, spark, cassandra를 설치해보도록 하겠습니다.<br/>
+<br/>
+먼저 빈 폴더를 만들어준 후, 아래와 같이 DockerFile 을 생성해주도록 합니다.<br/>
+<br/>
+DockerFile:<br/>
+
+<pre><code>FROM ubuntu:latest
+
+RUN apt-get update && apt-get upgrade
+RUN apt-get install -y wget
+RUN apt-get install -y openjdk-8-jdk
+RUN cd /opt && wget http://mirror.apache-kr.org/kafka/2.3.0/kafka_2.12-2.3.0.tgz && tar -zxvf kafka_2.12-2.3.0.tgz && rm -rf kafka_2.12-2.3.0.tgz
+RUN cd /opt && wget http://mirror.navercorp.com/apache/spark/spark-2.4.3/spark-2.4.3-bin-hadoop2.7.tgz && tar -zxvf spark-2.4.3-bin-hadoop2.7.tgz && rm -rf spark-2.4.3-bin-hadoop2.7.tgz
+RUN cd /opt &&  wget http://apache.mirror.cdnetworks.com/cassandra/3.11.4/apache-cassandra-3.11.4-bin.tar.gz && tar -zxvf apache-cassandra-3.11.4-bin.tar.gz && rm -rf apache-cassandra-3.11.4-bin.tar.gz
+</code></pre>
+
+이후, 생성한 폴더 내에서 아래와 같이 command를 입력하면 docker image가 생성되게 됩니다.<br/>
+
+<pre><code>docker build --tag=myUbuntu .
+</code></pre>
+
+위처럼 이미지를 생성 후, 아래와 같이 실행 명령을 입력하면 ubuntu가 실행되고, 내부에 java 및 프로그램들이 설치되어 있는 것을 확인할 수 있습니다.<br/>
+
+<pre><code>docker run -it myUbuntu
+</code></pre>
+
+</p>
+

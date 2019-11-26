@@ -1,0 +1,91 @@
+---
+title: RDD Operations - Transformations
+layout: post
+categories: spark
+---
+
+<p>
+다음 표는 Spark에서 지원하는 몇 가지 일반적인 변환을 보여줍니다.<br/>
+자세한 내용은 RDD API 문서(Scala, Java, Python, R) 및 pair RDD 함수 문서(Scala, Java)를 참조하십시오.<br/>
+<br/>
+* map(func)<br/>
+소스의 각 요소를 함수 func를 통해 전달하여 형성된 새로운 분산 데이터 세트를 반환합니다.<br/>
+<br/>
+* filter(func)<br/>
+해당 func이 true인 경우만을 택하는 새로운 분산 데이터 세트를 반환합니다.<br/>
+<br/>
+* flatMap(func)<br/>
+map과 비슷하지만 각 입력 항목에 대해 0개 이상의 출력 항목을 생성할 수 있습니다.<br/>
+따라서 func은 단일 항목이 아닌 Seq를 반환해야합니다.<br/>
+<br/>
+* mapPartitions(func)<br/>
+map과 유사하지만 RDD의 각 파티션(블록)에서 별도로 실행되므로 func는 T 유형의 RDD에서 실행될 때 Iterator &lt;T&gt; => Iterator &lt;U&gt; 유형으로 바뀌게 됩니다.<br/>
+<br/>
+* mapPartitionsWithIndex(func)<br/>
+mapPartitions와 유사하지만 파티션의 인덱스를 나타내는 정수 값을 func에 제공하므로 func는 T 유형이 RDD에서 실행될 때 (Int, Iterator &lt;T&gt;) => Iterator &lt;U&gt; 유형으로 바뀌게 됩니다.<br/>
+<br/>
+* sample(withReplacement, fraction, seed)<br/>
+주어진 난수 생성기 시드를 사용하여 교체 유무에 관계없이 데이터의 일부를 샘플링합니다.<br/>
+<br/>
+* union(otherDataset)<br/>
+기존 데이터세트와 다른 데이터 세트를 합쳐 새 데이터 세트를 반환합니다.<br/>
+<br/>
+* intersection(otherDataset)<br/>
+기존 dataset과 다른 dataset의 공통 요소만을 포함한 새 RDD를 반환합니다.<br/>
+<br/>
+* distinct([numPartitions]))<br/>
+데이터 세트의 중복을 제거하여 새로운 RDD를 반환합니다.<br/>
+<br/>
+* groupByKey([numPartitions])<br/>
+(K, V) 쌍의 데이터 집합에서 호출되면 (K, Iterable <V>) 쌍의 데이터 집합을 반환합니다.<br/>
+NOTE: 각 키에 대해 집계(예 : 합계 또는 평균)를 수행하기 위해 그룹화하는 경우 reduceByKey 또는 AggregateByKey를 사용하면 성능이 훨씬 향상됩니다.<br/>
+NOTE: 기본적으로 출력의 병렬 처리 수준은 상위 RDD의 파티션 수에 따라 다릅니다. 선택적으로 numPartitions 인수를 전달하여 동시 작업 갯수를 설정할 수 있습니다.<br/>
+<br/>
+* reduceByKey(func, [numPartitions])<br/>
+(K, V)쌍의 데이터 세트에서 호출되면 (K, V)쌍의 데이터 세트를 리턴합니다. <br/>
+여기서 각 키의 값은 주어진 감소 함수 기능을 사용하여 집계됩니다.<br/>
+이 유형은 (V, V) => V 유형이어야합니다. <br/>
+groupByKey에서와 같이 축소 작업 갯수는 선택적으로 두 번째 인수를 통해 구성 할 수 있습니다.<br/>
+<br/>
+* aggregateByKey(zeroValue)(seqOp, combOp, [numPartitions])<br/>
+(K, V)쌍의 데이터 세트에서 호출되면, 주어진 결합 함수와 중립 "제로"값을 사용하여 각 키의 값이 집계되는 (K, U) 쌍의 데이터 세트를 리턴합니다.<br/>
+불필요한 할당을 피하기위해서 입력 값 유형과 다른 집계 값 유형을 허용합니다. <br/>
+groupByKey에서와 같이 축소 작업 수는 선택적 두 번째 인수를 통해 구성 할 수 있습니다.<br/>
+<br/>
+* sortByKey([ascending], [numPartitions])<br/>
+K가 Ordered를 구현하는 인수인 경우, (K, V)쌍의 데이터 세트에서 호출되면 부울 오름차순 인수에 지정된대로 키별로 오름차순 또는 내림차순으로 정렬 된 (K, V)쌍의 데이터 세트를 리턴합니다.<br/>
+<br/>
+* join(otherDataset, [numPartitions])<br/>
+(K, V) 및 (K, W) 유형의 데이터 집합에서 호출되면 각 키의 모든 요소 쌍과 함께 (K, (V, W)) 쌍의 데이터 집합을 반환합니다. <br/>
+outer join은 leftOuterJoin, rightOuterJoin 및 fullOuterJoin을 통해 지원됩니다.<br/>
+<br/>
+* cogroup(otherDataset, [numPartitions])<br/>
+(K, V) 및 (K, W) 유형의 데이터 집합에서 호출되면 (K, (Iterable &lt;V&gt;, Iterable &lt;W&gt;)) 튜플의 데이터 집합을 반환합니다. <br/>
+이 작업을 groupWith라고도합니다.<br/>
+<br/>
+* cartesian(otherDataset)<br/>
+T 및 U 유형의 데이터 집합에서 호출되면 (T, U)쌍 (모든 요소가 포함된 쌍)의 데이터 집합을 반환합니다.<br/>
+<br/>
+* pipe(command, [envVars])<br/>
+쉘 명령을 통해 RDD의 각 파티션을 파이프합니다. (예 : Perl 또는 bash 스크립트 RDD 요소는 프로세스의 stdin에 기록되고 stdout으로 출력되는 행은 문자열의 RDD로 리턴됩니다.<br/>
+<br/>
+* coalesce(numPartitions)<br/>
+RDD의 파티션 수를 numPartitions로 줄입니다.<br/>
+큰 규모의 데이터 세트를 필터링 한 후 작업을 보다 효율적으로 실행하는 데 유용합니다.<br/>
+<br/>
+* repartition(numPartitions)<br/>
+RDD의 데이터를 무작위로 재구성하여 더 많거나 적은 파티션을 생성하고 이들 사이에 균형을 맞 춥니다. <br/>
+이것은 항상 네트워크를 통해 모든 데이터를 섞습니다.<br/>
+<br/>
+* repartitionAndSortWithinPartitions(partitioner)<br/>
+주어진 파티 셔너에 따라 RDD를 다시 파티셔닝하고 결과 파티션마다 키별로 레코드를 정렬합니다.<br/>
+이는 repartition을 호출한 다음 각 파티션 내에서 정렬하는 것보다 정렬을 셔플 기계로 정렬 할 수 있기 때문에 더 효율적입니다.<br/>
+
+<br/>
+참조 : https://spark.apache.org/docs/2.1.1/programming-guide.html#transformations<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+
+
+
+</p>
+

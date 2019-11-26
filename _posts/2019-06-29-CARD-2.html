@@ -1,0 +1,89 @@
+---
+title: 카드2  
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/2164 <br/><br/>
+
+이번은 큐를 이용해 동작을 구현하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    private static Node head = null;
+
+    public static void main(String args[]) {
+
+        Scanner sc = new Scanner(System.in);
+
+        int N = sc.nextInt();
+        for (int i = 1; i <= N; i++) {
+            add(i);
+        }
+
+        Node node = head;
+
+        int ret = 0;
+        while (node != null) {
+            ret = node.data;
+            node = remove(node);
+        }
+
+        System.out.println(ret);
+    }
+
+    private static Node remove(Node node) {
+        if (node.next == node) {
+            return null;
+        }
+
+        node.prev.next = node.next;
+        node.next.prev = node.prev;
+
+
+        return node.next.next;
+    }
+
+    private static void add(int data) {
+        Node node = new Node(data);
+        if (head == null) {
+            head = node;
+            head.prev = node;
+            head.next = node;
+        } else {
+            node.prev = head.prev;
+            node.next = head;
+
+            head.prev.next = node;
+            head.prev = node;
+        }
+    }
+}
+
+class Node {
+    int data;
+    Node prev;
+    Node next;
+
+    Node(int data) {
+        this.data = data;
+    }
+
+    Node(int data, Node prev, Node next) {
+        this.data = data;
+        this.prev = prev;
+        this.next = next;
+    }
+}
+</code></pre>
+
+이번에는 큐를 이용해 원순열을 생성하고, 규칙에 의해 제거하는 문제를 풀어보도록 하겠습니다.<br/>
+가장 위에 있는 카드를 버리고 그 다음 카드를 가장 아래로 이동시키는 동작이므로,큐에서는 현재 노드를 제거하고 그 다음 다음 노드로 이동하는 것과 똑같습니다.<br/>
+노드를 이동하게 되면 전체가 원모양이므로 바로 이전에 있던 노드는 가장 끝으로 이동하는 것과 같기 때문입니다.<br/>
+위와 같은 logic으로 그대로 코드로 구현해주도록 합니다.<br/>
+
+</p>
+

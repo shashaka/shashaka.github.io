@@ -1,0 +1,62 @@
+---
+title: docker로 spark cassandra 연동하기
+layout: post
+categories: blog
+---
+
+<p>
+먼저 cassandra docker를 다운로드 받도록 합니다.<br/>
+DockerHub에 공식 이미지가 있으니, 아래와 같은 방법으로 다운로드가 가능합니다.<br/>
+
+<pre><code>docker pull cassandra
+</code></pre>
+
+하지만, spark는 공식 이미지가 없으니, openjdk:8-alpine을 통해서 만들어주도록 합니다.<br/>
+아래의 url은 이후에는 바뀔 수 있으므로, spark 다운로드 사이트에서 url을 체크해 적용해주도록 합니다.<br/>
+또한, openjdk 이미지에는 bash가 설치되어 있지 않으니, 아래와 같이 apk add를 통해 설치를 해줍니다.<br/>
+spark-shell을 실행시키기 위해서 bash가 필요합니다.<br/>
+<br/>
+- DockerFile<br/>
+
+<pre><code>FROM openjdk:8-alpine
+
+RUN apk add --no-cache bash
+RUN cd /opt && wget http://mirror.navercorp.com/apache/spark/spark-2.4.4/spark-2.4.4-bin-hadoop2.7.tgz && tar -zxvf spark-2.4.4-bin-hadoop2.7.tgz  && rm -rf spark-2.4.4-bin-hadoop2.7.tgz  
+</code></pre>
+
+이제 위와 같이 두 개의 이미지가 준비되었으면, 둘 다 실행해주도록 합니다.<br/>
+
+<pre><code>docker run -d -p9042:9042 --rm --name cassandra -d cassandra
+
+docker run -d spark
+</code></pre>
+
+아래와 같이, cassandra docker에 접속하여, keyspace와 table을 생성하여주고,<br/>
+
+<pre><code>docker exec -it cassandra cqlsh
+
+CREATE KEYSPACE test WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1 };
+CREATE TABLE test.kv(key text PRIMARY KEY, value int);
+
+INSERT INTO test.kv(key, value) VALUES ('key1', 1);
+INSERT INTO test.kv(key, value) VALUES ('key2', 2);
+</code></pre>
+
+이후에 spark docker container에 들어가서 아래와 같이 spark task를 진행해줍니다.<br/>
+
+<pre><code>$SPARK_HOME/bin/spark-shell --conf spark.cassandra.connection.host=<cassandra docker internal ip> --packages datastax:spark-cassandra-connector:2.4.0-s_2.11
+</code></pre>
+
+scala shell이 뜨면, 아래와 같이 입력해주면 해당 연산을 통해 값을 return하는 것을 확인할 수 있습니다.<br/>
+
+<pre><code>import com.datastax.spark.connector._
+import org.apache.spark.sql.cassandra._
+
+val rdd = sc.cassandraTable("test", "kv")
+println(rdd.count)
+println(rdd.first)
+println(rdd.map(_.getInt("value")).sum)       
+</code></pre>
+
+reference : https://github.com/datastax/spark-cassandra-connector/blob/master/doc/0_quick_start.md<br/>
+</p>

@@ -1,0 +1,32 @@
+---
+title: Running SQL Queries Programmatically
+layout: post
+categories: spark
+---
+
+<p>
+SparkSession의 sql 함수를 사용하면 응용 프로그램에서 프로그래밍 방식으로 SQL 쿼리를 실행하고 결과를 Dataset&lt;Row&gt;로 반환 할 수 있습니다.<br/>
+<br/>
+<pre><code>import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+
+// Register the DataFrame as a SQL temporary view
+df.createOrReplaceTempView("people");
+
+Dataset&lt;Row&gt; sqlDF = spark.sql("SELECT * FROM people");
+sqlDF.show();
+// +----+-------+
+// | age|   name|
+// +----+-------+
+// |null|Michael|
+// |  30|   Andy|
+// |  19| Justin|
+// +----+-------+
+</code></pre>
+<br/>
+https://spark.apache.org/docs/latest/sql-getting-started.html#untyped-dataset-operations-aka-dataframe-operations
+<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+
+</p>
+

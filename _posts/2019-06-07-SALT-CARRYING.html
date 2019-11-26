@@ -1,0 +1,51 @@
+---
+title: 설탕 배달
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/2839 <br/><br/>
+
+이번은 최소 나눔 연산 문제를 풀어보겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    private static int ret = -1;
+
+    public static void main(String args[]) {
+        Scanner scanner = new Scanner(System.in);
+        int totalValue = scanner.nextInt();
+
+        int fiveMax = totalValue / 5;
+        int threeMax = totalValue / 3;
+
+        for (int fiveNum = 0; fiveNum <= fiveMax; fiveNum++) {
+            for (int threeNum = 0; threeNum <= threeMax; threeNum++) {
+                if (5 * fiveNum + 3 * threeNum == totalValue) {
+                    int tempRet = fiveNum + threeNum;
+                    if (ret == -1) {
+                        ret = tempRet;
+                    } else {
+                        if (tempRet < ret) {
+                            ret = tempRet;
+                        }
+                    }
+                }
+            }
+        }
+
+        System.out.println(ret);
+    }
+
+}
+</code></pre>
+
+java의 scanner를 통해 system 입력을 받고 5kg봉투,3kg봉투를 사용할 수 있는 최대값을 구합니다.<br/>
+5kg봉투와 3kg봉투를 각각 조합하여 가장 최소의 갯수로 totalValue의 값을 만드는 값을 찾기 때문에 for문을 사용하여 전체의 경우의 수를 구합니다. <br/>
+전체의 경우의 수를 구하는 중에 totalValue와 현재의 값이 같으면 fiveNum과 threeNum을 더해서 ret값이 설정 이전이거나 이전에 구해진 ret보다 값이 적은 경우, 값을 교체합니다.<br/>
+ret값이 설정되지 않는 경우, 기본값이 -1이기 때문에 -1이 return 되고 구해지는 경우는 해당 값이 return 되게 됩니다.
+</p>
+

@@ -1,0 +1,37 @@
+---
+title: RDD Operations - Working with Key-Value Pairs
+layout: post
+categories: spark
+---
+
+<p>
+대부분의 Spark 작업은 모든 유형의 객체가 포함된 RDD에서 작동하지만 일부 특수한 작업은 키-값 쌍의 RDD에서만 사용할 수 있습니다.<br/>
+가장 일반적인 예는 요소를 key를 기준으로 그룹화 또는 집계하는 것과 같은 분산된 "suffle"작업입니다.<br/>
+<br/>
+Java에서 키-값 쌍은 Scala 표준 라이브러리의 scala.Tuple2 클래스를 사용하여 표시됩니다.<br/>
+new Tuple2(a, b)를 호출하여 튜플을 만들고 나중에 tuple._1 () 및 tuple._2 ()를 사용하여 해당 필드에 액세스 할 수 있습니다.<br/>
+<br/>
+키-값 쌍의 RDD는 JavaPairRDD 클래스로 표시됩니다.<br/>
+mapToPair 및 flatMapToPair와 같은 특수한 경우의 map 작업을 사용하여 JavaRDD로부터 JavaPairRDD를 만들 수 있습니다.<br/>
+<br/>
+예를 들어, 다음 코드는 키-값 쌍에서 reduceByKey 연산을 사용하여 파일에서 각 텍스트 행이 몇 번 발생하는지 계산합니다.<br/>
+
+<pre><code>JavaRDD&lt;String&gt; lines = sc.textFile("data.txt");
+JavaPairRDD&lt;String, Integer&gt; pairs = lines.mapToPair(s -&gt; new Tuple2(s, 1));
+JavaPairRDD&lt;String, Integer&gt; counts = pairs.reduceByKey((a, b) -&gt; a + b);
+</code></pre>
+
+counts.sortByKey()를 사용할 수도 있습니다.<br/>
+예를 들어, 쌍을 알파벳순으로 정렬하고 마지막으로 counts.collect()를 사용하여 객체 배열로 드라이버 프로그램에 다시 가져옵니다.<br/>
+자세한 내용은 Object.hashCode() 설명서에 요약 된 계약을 참조하십시오.<br/>
+<br/>
+Note: 키-값 쌍 작업에서 사용자 정의 객체를 키로 사용하는 경우 사용자 정의 equals() 메소드와 일치하는 hashCode ) 메소드가 함께 있어야합니다.<br/>
+
+<br/>
+참조 : https://spark.apache.org/docs/2.1.1/programming-guide.html#working-with-key-value-pairs<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+
+
+
+</p>
+

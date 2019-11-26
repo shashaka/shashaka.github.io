@@ -1,0 +1,29 @@
+---
+title: Initializing Spark
+layout: post
+categories: spark
+---
+
+<p>
+
+
+
+Spark 프로그램에서 가장 먼저해야 할 일은 Spark에 클러스터에 액세스하는 방법을 알려주는 JavaSparkContext 객체를 만드는 것입니다.<br/>
+SparkContext를 만들려면 먼저 응용 프로그램에 대한 정보가 들어있는 SparkConf 객체를 만들어야합니다.<br/>
+
+<pre><code>SparkConf conf = new SparkConf().setAppName(appName).setMaster(master);
+JavaSparkContext sc = new JavaSparkContext(conf);
+</pre></code>
+
+appName 매개 변수는 응용 프로그램이 클러스터 UI에 표시 할 이름입니다.<br/>
+master는 Spark, Mesos 또는 YARN 클러스터의 URL 또는 로컬 모드에서 실행할 경우 "local"로 입력해주도록 합니다.<br/>
+실제로 사용하는 대부분의 경우에는, 클러스터에서 실행되는 프로그램에 master를 하드 코딩하지 않고 spark-submit을 사용하여 config 값으로 전달받아 사용합니다.<br/>
+그러나 로컬 테스트 및 단위 테스트의 경우 "local"을 전달하여 Spark를 실행할 수 있습니다.<br/>
+<br/>
+참조 : https://spark.apache.org/docs/2.2.0/rdd-programming-guide.html#initializing-spark<br/>
+<h3>이 문서는 개인적인 목적이나 배포하기 위해서 복사할 수 있다. 출력물이든 디지털 문서든 각 복사본에 어떤 비용도 청구할 수 없고 모든 복사본에는 이 카피라이트 문구가 있어야 한다.</h3>
+
+
+
+</p>
+

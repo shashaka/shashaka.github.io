@@ -1,0 +1,67 @@
+---
+title: RestTemplate logging
+layout: post
+categories: springboot
+---
+
+<p>
+Spring의 restTemplate에 interceptor를 추가하여, 내가 호출한 rest call의 request와 response를 로그로 남길 수 있습니다.<br/>
+<br/>
+가장 먼저, 아래와 같이 configuration을 추가하여 기존에 사용되는 restTemplate에 interceptor를 추가해줍니다.<br/>
+ClientHttpRequestInterceptor를 이용하여, restTemplate의 메서드가 실행된 이후에 해당 request와 response를 logging하도록 합니다.<br/>
+
+<pre><code>package org.blog.test.config;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpRequest;
+import org.springframework.http.client.ClientHttpRequestExecution;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.web.client.RestTemplate;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.util.Collections;
+
+@Configuration
+@Slf4j
+public class RestTemplateConfig {
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate() {{
+            setInterceptors(Collections.singletonList(clientHttpRequestInterceptor()));
+        }};
+    }
+
+    private ClientHttpRequestInterceptor clientHttpRequestInterceptor() {
+        return new ClientHttpRequestInterceptor() {
+            @Override
+            public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
+                ClientHttpResponse response = execution.execute(request, body);
+                doLog(request, body, response);
+                return response;
+            }
+
+            private void doLog(HttpRequest request, byte[] body, ClientHttpResponse response) throws IOException {
+                log.info("[Request] [{}]  {}, Headers : [{}], Body : [{}]", request.getMethod(), request.getURI(), request.getHeaders(), new String(body, Charset.forName("UTF-8")));
+                log.info("[Response] [{}], Headers : [{}], Body : [{}] ", response.getStatusCode(), response.getHeaders(), new BufferedReader(new InputStreamReader(response.getBody())).readLine());
+            }
+        };
+    }
+}
+</code></pre>
+
+이후, restTemplate을 이용해 rest call을 호출하게 되면, 아래와 같이 log가 남는 것을 확인할 수 있습니다.<br/>
+<br/>
+<pre><code>2017-06-05 19:17:22.791  INFO 632 --- [           main] org.blog.test.config.RestTemplateConfig  : [Request] [GET]  http://google.com, Headers : [{Accept=[text/plain, application/json, application/*+json, */*], Content-Length=[0]}], Body : []
+2017-06-05 19:17:22.795  INFO 632 --- [           main] org.blog.test.config.RestTemplateConfig  : [Response] [200], Headers : [{Date=[Mon, 05 Jun 2017 10:17:05 GMT], Expires=[-1], Cache-Control=[private, max-age=0], Content-Type=[text/html; charset=EUC-KR], P3P=[CP="This is not a P3P policy! See https://www.google.com/support/accounts/answer/151657?hl=en for more info."], Server=[gws], X-XSS-Protection=[1; mode=block], X-Frame-Options=[SAMEORIGIN], Set-Cookie=[NID=104=IFVKfSROHibils-LHAV7lONxtRyq0EnY_eb1DpanSbt_zj7jJI782Fa2nmOR-pJk4PuVx4yuOjVmG6XglcG07CMUZKkEqd3eHErTq4sYlagZ6E5Uo4Gf9OmfC4yYKM86; expires=Tue, 05-Dec-2017 10:17:05 GMT; path=/; domain=.google.co.kr; HttpOnly], Accept-Ranges=[none], Vary=[Accept-Encoding], Transfer-Encoding=[chunked]}], Body : [**********]
+</code></pre>
+
+전체 예제는 아래 링크에서 다운로드 받을 수 있습니다. <br/>
+<br/>
+https://gitlab.com/shashaka/rest-logging-project </p>

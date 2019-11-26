@@ -1,0 +1,95 @@
+---
+title: ATM  
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/11399 <br/><br/>
+
+이번은 기다리는 시간의 합을 최소화하는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+static int* arr;
+static int* sum;
+
+void quickSort(int arr[], int low, int high);
+
+int main(void) {
+
+	int N;
+
+	scanf("%d", &N);
+
+	arr = new int[N];
+	sum = new int[N];
+
+	for (int i = 0; i < N; i++)
+	{
+		scanf("%d", &arr[i]);
+	}
+	
+	quickSort(arr,0,N-1);
+	
+	sum[0] = arr[0];
+
+	for (int i = 1; i < N; i++)
+	{
+		sum[i] = sum[i - 1] + arr[i];
+	}
+
+	int total = 0;
+
+	for (int i = 0; i < N; i++)
+	{
+		total += sum[i];
+	}
+
+	printf("%d", total);
+
+	return 0;
+}
+
+void swap(int* a, int* b)
+{
+	int t = *a;
+	*a = *b;
+	*b = t;
+}
+
+int partition(int arr[], int low, int high)
+{
+	int pivot = arr[high];
+	int i = (low - 1); 
+
+	for (int j = low; j <= high - 1; j++)
+	{
+		if (arr[j] <= pivot)
+		{
+			i++;   
+			swap(&arr[i], &arr[j]);
+		}
+	}
+	swap(&arr[i + 1], &arr[high]);
+	return (i + 1);
+}
+void quickSort(int arr[], int low, int high)
+{
+	if (low < high)
+	{
+
+		int pi = partition(arr, low, high);
+
+		quickSort(arr, low, pi - 1);
+		quickSort(arr, pi + 1, high);
+	}
+}
+</code></pre>
+
+전체 기다리는 시간의 최소를 찾는 문제입니다.<br/>
+앞에 있는 사람이 기다리는 대기 시간이 뒤에 있는 사람 수 만큼 곱해서 영향을 미치므로 앞에 있는 사람의 대기시간을 최소로 줄이면 됩니다.<br/>
+따라서 대기시간이 작은 순서대로 sort를 한후, 전체 대기시간을 계산하도록 합니다.<br/>
+<br/>
+</p>
+

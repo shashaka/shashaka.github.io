@@ -1,0 +1,106 @@
+---
+title: 스택 수열
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/1874 <br/><br/>
+
+이번은 스택을 이용해 수열을 만드는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String args[]) {
+
+        Scanner sc = new Scanner(System.in);
+
+        Stack stack = new Stack(100000);
+
+        int size = sc.nextInt();
+
+        String ret = solve(sc, stack, size);
+
+        System.out.println(ret);
+    }
+
+    private static String solve(Scanner sc, Stack stack, int size) {
+        StringBuilder builder = new StringBuilder();
+
+        int stackVal = 0;
+        for (int i = 0; i < size; i++) {
+            int val = sc.nextInt();
+            while (true) {
+                if (stack.isEmpty()) {
+                    stackVal++;
+                    stack.push(stackVal);
+                    builder.append("+" + "\n");
+                } else {
+                    if (stack.peek() < val) {
+                        stackVal++;
+                        stack.push(stackVal);
+                        builder.append("+" + "\n");
+                    } else if (stack.peek() == val) {
+                        stack.pop();
+                        builder.append("-" + "\n");
+                        break;
+                    } else {
+                        return "NO";
+                    }
+                }
+            }
+        }
+        return builder.toString();
+    }
+}
+
+class Stack {
+    private int top = -1;
+    private int[] queue;
+
+    Stack(int max) {
+        queue = new int[max];
+    }
+
+    void init() {
+        this.top = -1;
+    }
+
+    void push(int val) {
+        top++;
+        queue[top] = val;
+    }
+
+    int pop() {
+        if (top == -1) {
+            return -1;
+        }
+        int val = queue[top];
+        top--;
+        return val;
+    }
+
+    int peek() {
+        if (isEmpty()) {
+            return -1;
+        } else {
+            return queue[top];
+        }
+    }
+
+    boolean isEmpty() {
+        return top == -1;
+    }
+}
+</code></pre>
+
+먼저 문제에 대한 설명을 추가하도록 하겠습니다.<br/>
+어떤 하나의 수열이 주어졌을 때, stack에 1부터 차례대로 값을 넣으면서 해당 수열과 같은 값을 순서에 맞게 pop을 수행할 수 있는가 하는 문제입니다.<br/>
+예를 들면, 4를 만들려면 1,2,3,4를 차례대로 push하고 pop을 수행하면 가능하고, 이어서 또 pop을 하면 3을 얻을 수 있게 됩니다.<br/>
+위와 같은 형식으로 그대로 logic을 만들어주면 위 문제를 푸는 것이 가능합니다.<br/>
+1부터 차례대로 값을 push하는데, stack이 비어있을 경우는 값을 넣고, 비어있지 않을 경우는 현재 stack의 top의 값이 수열의 값보다 작을 경우는 1만큼 큰 값을 push,같은 경우는 pop, 큰 경우는 해당 값을 얻을 방법이 없기 때문에 "NO"를 출력해주도록 합니다.<br/>
+
+</p>
+

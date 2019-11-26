@@ -1,0 +1,60 @@
+---
+title: 부녀회장이 될테야
+layout: post
+categories: algorithm
+---
+
+<p>
+문제 : https://www.acmicpc.net/problem/2775 <br/><br/>
+
+이번은 층과 거주자 수의 규칙을 찾는 문제를 풀어보도록 하겠습니다. <br/>
+
+<pre><code>import java.util.Scanner;
+
+public class Main {
+
+    private static int[][] intArr = new int[15][15];
+
+    public static void main(String args[]) {
+
+        for (int i = 0; i < 15; i++) {
+            intArr[0][i] = i;
+        }
+
+        for (int i = 1; i < 15; i++) {
+            for (int k = 1; k < 15; k++) {
+                if (k == 1) {
+                    intArr[i][k] = 1;
+                } else {
+                    intArr[i][k] = intArr[i][k - 1] + intArr[i - 1][k];
+                }
+            }
+        }
+
+        Scanner sc = new Scanner(System.in);
+
+        int size = sc.nextInt();
+
+        for (int i = 0; i < size; i++) {
+            int first = sc.nextInt();
+            int second = sc.nextInt();
+            System.out.println(intArr[first][second]);
+        }
+    }
+}
+</code></pre>
+
+이 문제는 가장 먼저 각 층에 사는 사람의 배열을 만들어놓고, 값이 들어오면 해당 값을 출력해주도록 합니다.<br/>
+바로 아래층에서 1~본인의 호수까지 사는 사람을 다 합친 만큼 모아야 하니, 1호는 무조건 1, 그 다음부터는 앞 호수의 값과 아래층의 같은 호수 사람을 합친 것과 같습니다.<br/>
+예를 들면, 아래와 같습니다.<br/>
+
+<pre><code>
+1 1+(1+(1+2)) 1+(1+(1+2))+1+(1+2)+(1+2+3)
+1 1+(1+2) 1+(1+2)+(1+2+3) 1+(1+2)+(1+2+3)+(1+2+3+4)
+1 1+2 1+2+3 1+2+3+4 1+2+3+4+5
+1 2 3 4 5 6 7 8 9
+</code></pre>
+
+위와 같은 규칙으로 배열의 값을 다 구한 이후, 들어오는 값에 따라 답을 출력해주도록 합니다.<br/>
+</p>
+
