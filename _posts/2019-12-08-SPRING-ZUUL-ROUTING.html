@@ -1,0 +1,162 @@
+---
+title: spring netflix zuul routing
+layout: post
+categories: springboot
+---
+
+<p>
+spring-cloud-starter-netflix-zuul을 활용하여, routing을 하는 방법을 알아보도록 하겠습니다.<br/>
+먼저 아래와 같이 gradle을 통해 dependency를 정의해줍니다.<br/>
+
+<pre><code>plugins {
+    id 'java'
+}
+
+group 'org.shashaka.io'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.2.0.RELEASE'
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.2.0.RELEASE'
+    compile group: 'org.springframework.cloud', name: 'spring-cloud-starter-netflix-zuul', version: '2.2.0.RELEASE'
+    compile group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
+}
+</code></pre>
+
+그리고 routing을 할 endpoint를 아래와 같이 restController로 생성해주도록 합니다.
+기본적인 routing만 사용할 것이므로 @EnableZuulProxy가 아니라, @EnableZuulServer로 설정해주었습니다.
+
+<pre><code>package org.shashaka.io;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.zuul.EnableZuulServer;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@SpringBootApplication
+@EnableZuulServer
+@RestController
+public class RouteApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(RouteApplication.class, args);
+    }
+
+    @RequestMapping(path = "/get")
+    public String get(@RequestParam String route) {
+        return route;
+    }
+}
+
+</code></pre>
+
+이제 아래와 같이 routeFilter를 정의해주도록 합니다.
+route filter는 webClient를 활용하여 진행하도록 하겠습니다.
+queryParam에서 route의 값이 true이면 http://httpbin.org 으로 routing하여 호출하고,
+false인 경우는 그대로 app에서 처리하도록 설정합니다.
+
+<pre><code>package org.shashaka.io;
+
+import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.context.RequestContext;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.netflix.zuul.filters.ProxyRequestHelper;
+import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
+import org.springframework.http.HttpHeaders;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+@Component
+@Slf4j
+public class RoutingFilter extends ZuulFilter {
+
+    @Override
+    public String filterType() {
+        return FilterConstants.ROUTE_TYPE;
+    }
+
+    @Override
+    public int filterOrder() {
+        return FilterConstants.SIMPLE_HOST_ROUTING_FILTER_ORDER;
+    }
+
+    @Override
+    public boolean shouldFilter() {
+        return true;
+    }
+
+    @Override
+    public Object run() {
+
+        RequestContext context = RequestContext.getCurrentContext();
+
+        Map<String, List<String>> queryParams = context.getRequestQueryParams();
+
+        if (queryParams != null && queryParams.containsKey("route") && queryParams.get("route").contains("true")) {
+            ClientResponse response = WebClient.create("http://httpbin.org" + context.getRequest().getRequestURI())
+                    .get()
+                    .exchange()
+                    .block();
+
+            ProxyRequestHelper helper = new ProxyRequestHelper();
+
+            try {
+                helper.setResponse(response.rawStatusCode(),
+                        new ByteArrayInputStream(response.bodyToMono(String.class).block().getBytes()),
+                        new HttpHeaders());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            RequestContext.getCurrentContext().setSendZuulResponse(false);
+        } else {
+            RequestContext.getCurrentContext()
+                    .set(FilterConstants.FORWARD_TO_KEY, RequestContext.getCurrentContext().getRequest().getRequestURI());
+        }
+        return null;
+    }
+}
+</code></pre>
+
+아래와 같이 routing이 정상 동작하는 것을 알 수 있습니다.
+
+<pre><code>$ http :8080/get?route=true
+HTTP/1.1 200
+Date: Sun, 08 Dec 2019 10:14:52 GMT
+Transfer-Encoding: chunked
+
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Accept-Encoding": "gzip",
+    "Host": "httpbin.org",
+    "User-Agent": "ReactorNetty/0.9.0.RELEASE"
+  },
+  "origin": "###########",
+  "url": "https://httpbin.org/get"
+}
+
+
+$ http :8080/get?route=false
+HTTP/1.1 200
+Content-Length: 5
+Content-Type: text/plain;charset=UTF-8
+Date: Sun, 08 Dec 2019 10:14:56 GMT
+
+false
+</code></pre>
+</p>
