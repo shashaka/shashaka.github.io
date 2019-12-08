@@ -29,8 +29,8 @@ dependencies {
 }
 </code></pre>
 
-그리고 routing을 할 endpoint를 아래와 같이 restController로 생성해주도록 합니다.
-기본적인 routing만 사용할 것이므로 @EnableZuulProxy가 아니라, @EnableZuulServer로 설정해주었습니다.
+그리고 routing을 할 endpoint를 아래와 같이 restController로 생성해주도록 합니다.<br/>
+기본적인 routing만 사용할 것이므로 @EnableZuulProxy가 아니라, @EnableZuulServer로 설정해주었습니다.<br/>
 
 <pre><code>package org.shashaka.io;
 
@@ -57,10 +57,10 @@ public class RouteApplication {
 
 </code></pre>
 
-이제 아래와 같이 routeFilter를 정의해주도록 합니다.
-route filter는 webClient를 활용하여 진행하도록 하겠습니다.
-queryParam에서 route의 값이 true이면 http://httpbin.org 으로 routing하여 호출하고,
-false인 경우는 그대로 app에서 처리하도록 설정합니다.
+이제 아래와 같이 routeFilter를 정의해주도록 합니다.<br/>
+route filter는 webClient를 활용하여 진행하도록 하겠습니다.<br/>
+queryParam에서 route의 값이 true이면 http://httpbin.org 으로 routing하여 호출하고,<br/>
+false인 경우는 그대로 app에서 처리하도록 설정합니다.<br/>
 
 <pre><code>package org.shashaka.io;
 
@@ -131,7 +131,7 @@ public class RoutingFilter extends ZuulFilter {
 }
 </code></pre>
 
-아래와 같이 routing이 정상 동작하는 것을 알 수 있습니다.
+아래와 같이 routing이 정상 동작하는 것을 알 수 있습니다.<br/>
 
 <pre><code>$ http :8080/get?route=true
 HTTP/1.1 200
