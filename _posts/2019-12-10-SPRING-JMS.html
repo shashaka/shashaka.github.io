@@ -1,0 +1,121 @@
+---
+title: spring boot jms
+layout: post
+categories: springboot
+---
+
+<p>
+spring jms를 이용해 local에서 비동기 처리를 진행해보도록 하겠습니다.<br/>
+먼저 아래와 같이 gradle을 통해 dependency를 정의해줍니다.<br/>
+
+<pre><code>plugins {
+    id 'org.springframework.boot' version '2.2.2.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+    id 'java'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux'
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-activemq', version: '2.2.0.RELEASE'
+
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+}
+</code></pre>
+
+그리고 아래와같이 restController를 이용해 API를 생성하고, 해당 API가 호출되면 jmsTemplate을 통해 queue에 넣어주도록 합니다.<br/>
+
+<pre><code>package org.shashaka.io;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.shashaka.io.demo.Coffee;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.jms.annotation.EnableJms;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.core.MessageCreator;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.jms.Queue;
+
+@SpringBootApplication
+@Slf4j
+@RestController
+@EnableJms
+public class JmsApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(JmsApplication.class, args);
+    }
+
+    public static final String LOCAL_QUEUE = "LOCAL_QUEUE";
+
+    @Autowired
+    private JmsTemplate jmsTemplate;
+
+    @PostMapping("/demo")
+    public String addCoffee(@RequestBody Coffee coffee) {
+
+        jmsTemplate.convertAndSend(LOCAL_QUEUE, coffee);
+        return "success";
+    }
+
+    @Bean
+    Queue queue() {
+        return new ActiveMQQueue(LOCAL_QUEUE);
+    }
+
+}
+</code></pre>
+
+아래와같이 receiver를 설정해주면, queue에 들어온 내용을 처리하게 됩니다.<br/>
+
+
+<pre><code>package org.shashaka.io.demo;
+
+import org.shashaka.io.JmsApplication;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.jms.annotation.JmsListener;
+import org.springframework.stereotype.Component;
+
+@Component
+public class JmsReceiver {
+
+    @Autowired
+    ConfigurableApplicationContext context;
+
+    @JmsListener(destination = JmsApplication.LOCAL_QUEUE, containerFactory = "jmsListenerContainerFactory")
+    public void receiveMessage(Coffee message) {
+        System.out.println("Received : " + message);
+    }
+}
+</code></pre>
+
+아래와 같이 JMS가 정상 동작하는 것을 알 수 있습니다.<br/>
+
+<pre><code>Received : Coffee(name=few)
+</code></pre>
+</p>
