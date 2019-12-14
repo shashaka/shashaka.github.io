@@ -1,0 +1,124 @@
+---
+title: spring boot ratelimit
+layout: post
+categories: springboot
+---
+
+<p>
+spring interceptor를 이용해 간단한 ratelimiter를 작성해보도록 하겠습니다.<br/>
+
+먼저 ConcurrentHashMap을 이용해, key값에 따라 value의 값을 increment할 수 있게 만들어줍니다.
+
+<pre><code>package org.shashaka.io;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+@Component
+@Slf4j
+public class RateLimitUtils {
+
+    public static ConcurrentHashMap<String, AtomicInteger> rateLimitMap = new ConcurrentHashMap<>();
+
+    public AtomicInteger getRate(String key) {
+        return rateLimitMap.compute(key, (s, atomicInteger) -> {
+            if (atomicInteger == null) {
+                atomicInteger = new AtomicInteger(1);
+            } else {
+                atomicInteger.incrementAndGet();
+            }
+            return atomicInteger;
+        });
+    }
+
+    public void clearRates() {
+        rateLimitMap.clear();
+    }
+}
+
+</code></pre>
+
+그리고 interceptor를 통해, method가 수행되기 전에 rate를 체크해서 통과, 혹은 에러를 발생시키도록 합니다.
+
+<pre><code>package org.shashaka.io;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@Component
+@Slf4j
+public class RateLimitInterceptor implements HandlerInterceptor {
+
+    private final RateLimitUtils rateLimitUtils;
+
+    @Value("${rate.limit.rate}")
+    private int limitRate;
+
+    public RateLimitInterceptor(RateLimitUtils rateLimitUtils) {
+        this.rateLimitUtils = rateLimitUtils;
+    }
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+
+        String key = request.getHeader("user");
+
+        if (key == null) {
+            return true;
+        }
+
+        int rate = rateLimitUtils.getRate(key).get();
+
+        if (rate > limitRate) {
+            throw new RuntimeException("rate limit over");
+        }
+
+        return true;
+    }
+
+}
+</code></pre>
+
+interval을 설정해주기 위해서 scheduling을 사용해 해당 시간이 지나면 다시 init시켜주도록 합니다.
+
+<pre><code>package org.shashaka.io;
+
+import lombok.AllArgsConstructor;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+@EnableScheduling
+@AllArgsConstructor
+public class RateLimitConfig implements WebMvcConfigurer {
+
+    private final RateLimitInterceptor rateLimitInterceptor;
+
+    private final RateLimitUtils rateLimitUtils;
+
+    @Scheduled(fixedRateString = "${rate.limit.interval.milliseconds}")
+    public void clearRateLimit() {
+        rateLimitUtils.clearRates();
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(rateLimitInterceptor);
+    }
+}
+</code></pre>
+
+local에서 테스트를 해보면 적용한 config값에 따라 동작하는 것을 확인할 수 있습니다.<br/>
+
+</p>
