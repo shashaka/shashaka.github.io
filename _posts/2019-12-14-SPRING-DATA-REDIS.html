@@ -1,0 +1,64 @@
+---
+title: spring data redis config
+layout: post
+categories: springboot
+---
+
+<p>
+spring-data-redis 를 설정해보도록 하겠습니다.<br/>
+먼저 아래와 같이 dependency를 추가해주도록 합니다.
+
+<pre><code>    compile group: 'org.springframework.data', name: 'spring-data-redis', version: '2.2.2.RELEASE'
+    compile group: 'redis.clients', name: 'jedis', version: '3.1.0'
+</code></pre>
+
+그리고 아래와 같이 connection과 redisTemplate을 설정해주도록 합니다.
+
+<pre><code>package org.shashaka.io.cache;
+
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.jedis.JedisClientConfiguration;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import redis.clients.jedis.JedisPoolConfig;
+
+import java.time.Duration;
+
+@Configuration
+@EnableCaching
+public class CacheConfig {
+
+    @Bean
+    public RedisConnectionFactory redisConnectionFactory() {
+        return new JedisConnectionFactory(
+                new RedisStandaloneConfiguration("server", 6379),
+                JedisClientConfiguration.builder()
+                        .connectTimeout(Duration.ofSeconds(2L))
+                        .readTimeout(Duration.ofSeconds(2L))
+                        .usePooling()
+                        .poolConfig(new JedisPoolConfig() {{
+                            setMaxTotal(200);
+                            setMaxWaitMillis(2000L);
+                            setTestOnBorrow(true);
+                            setTestOnCreate(true);
+                        }})
+                        .build()
+        );
+    }
+
+    @Bean
+    public RedisTemplate<String, Long> rateLimiTemplate(RedisConnectionFactory redisConnectionFactory) {
+        RedisTemplate<String, Long> template = new RedisTemplate<>();
+        template.setConnectionFactory(redisConnectionFactory);
+        return template;
+    }
+}
+</code></pre>
+
+test를 진행해보면 실행에 따라서, redis에 값이 set, get 되는 것을 확인할 수 있습니다.<br/>
+
+</p>
