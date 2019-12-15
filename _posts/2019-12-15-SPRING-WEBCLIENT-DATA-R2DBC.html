@@ -1,0 +1,183 @@
+---
+title: spring data r2dbc
+layout: post
+categories: springboot
+---
+
+<p>
+spring data r2dbc를 이용해 mysql을 연동하는 예제를 진행해보도록 하겠습니다.<br/>
+
+먼저 아래와 같이 dependencies를 추가해주도록 합니다.
+현재 예제의 spring boot 버전은 2.2.2.RELEASE 입니다.
+
+<pre><code>dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-webflux'
+    compile group: 'org.springframework.data', name: 'spring-data-r2dbc', version: '1.0.0.RELEASE'
+    compile group: 'io.r2dbc', name: 'r2dbc-pool', version: '0.8.0.RELEASE'
+    compile group: 'com.github.jasync-sql', name: 'jasync-r2dbc-mysql', version: '1.0.12'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}
+</code></pre>
+
+그리고 아래와 같이 mysql database 설정을 추가해줍니다.
+
+<pre><code>package org.shashaka.io.demo;
+
+import io.r2dbc.spi.ConnectionFactories;
+import io.r2dbc.spi.ConnectionFactory;
+import io.r2dbc.spi.ConnectionFactoryOptions;
+import io.r2dbc.spi.Option;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.r2dbc.core.DatabaseClient;
+import org.springframework.data.r2dbc.core.DefaultReactiveDataAccessStrategy;
+import org.springframework.data.r2dbc.core.ReactiveDataAccessStrategy;
+import org.springframework.data.r2dbc.dialect.MySqlDialect;
+import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
+
+import java.time.Duration;
+
+import static io.r2dbc.spi.ConnectionFactoryOptions.*;
+
+@Configuration
+@EnableR2dbcRepositories
+public class DatabaseConfig {
+
+    @Bean
+    public ReactiveDataAccessStrategy reactiveDataAccessStrategy() {
+        return new DefaultReactiveDataAccessStrategy(new MySqlDialect());
+    }
+
+    @Bean
+    public ConnectionFactory connectionFactory() {
+        return ConnectionFactories.get(ConnectionFactoryOptions.builder()
+                .option(DRIVER, "pool")
+                .option(PROTOCOL, "mysql")
+                .option(HOST, "[mysql_server_host]")
+                .option(PORT, 3306)
+                .option(USER, "[mysql_user]")
+                .option(PASSWORD, "[mysql_password]")
+                .option(DATABASE, "demo")
+                .option(CONNECT_TIMEOUT, Duration.ofSeconds(2L))
+                .option(Option.valueOf("acquireRetry"), 3)
+                .option(Option.valueOf("initialSize"), 10)
+                .option(Option.valueOf("maxSize"), 100)
+                .option(Option.valueOf("validationQuery"), "SELECT 1")
+                .option(Option.valueOf("validationDepth"), "REMOTE")
+                .build());
+    }
+
+    @Bean
+    public DatabaseClient databaseClient(ConnectionFactory connectionFactory) {
+        return DatabaseClient.builder()
+                .connectionFactory(connectionFactory)
+                .build();
+    }
+}
+</code></pre>
+
+mysql에 생성되어있는 table과 entity를 맵핑하기 위해 아래처럼 table class를 작성해줍니다.
+
+<pre><code>package org.shashaka.io.demo;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
+
+import java.sql.Timestamp;
+
+@Table("MyGuests")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class MyGuest {
+
+    @Id
+    @Column
+    private Integer id;
+
+    @Column
+    private String firstname;
+
+    @Column
+    private String lastname;
+
+    @Column
+    private String email;
+
+    @Column
+    private Timestamp reg_date;
+
+}
+</code></pre>
+
+이후, spring-data-jpa와 비슷한 형식으로 repository를 추가해주도록 합니다.
+
+<pre><code>package org.shashaka.io.demo;
+
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface DemoRepository extends ReactiveCrudRepository<MyGuest, Integer> {
+}
+</code></pre>
+
+restController를 만들어 준 후, API를 호출해주면 정상적으로 동작하는 것을 확인할 수 있습니다.
+
+<pre><code>package org.shashaka.io.demo;
+
+import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+@RestController
+@AllArgsConstructor
+public class DemoController {
+
+    private final DemoRepository demoRepository;
+
+    @GetMapping("/demo")
+    public Flux<MyGuest> demo() {
+        return demoRepository.findAll();
+    }
+
+    @PostMapping("/demo")
+    @ResponseStatus(HttpStatus.OK)
+    public Mono<MyGuest> addGuest(@RequestBody MyGuest myGuest) {
+        return demoRepository.save(myGuest);
+    }
+}
+</code></pre>
+
+<pre><code>$ http.exe :8080/demo <<< '{"firstname":"dsf","lastname":"fedwfefw"}'
+{"id":6,"firstname":"dsf","lastname":"fedwfefw","email":null,"reg_date":null}
+
+$ http :8080/demo
+HTTP/1.1 200
+Connection: keep-alive
+Content-Type: application/json
+Date: Sun, 15 Dec 2019 06:00:58 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+
+[
+    {
+        "email": null,
+        "firstname": "dsf",
+        "id": 6,
+        "lastname": "fedwfefw",
+        "reg_date": "2019-12-14T21:00:54.000+0000"
+    }
+]
+</code></pre>
+
+</p>
