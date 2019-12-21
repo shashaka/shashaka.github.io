@@ -75,5 +75,7 @@ Tracing.currentTracer().startScopedSpan("JMS_SPAN") 호출을 통해 traceContex
 </code></pre>
 
 위와 같이 log_id가 출력되는 것을 확인할 수 있습니다.<br/>
+주의할 점은 위와 같은 방식은 해당 producer와 consumer에서만 log_id가 이어지고,
+중간에 messageRouting을 처리하는 thread에서는 log_id가 설정되지 않는다는 점입니다.<br/>
 </p>
 
