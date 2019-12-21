@@ -1,0 +1,79 @@
+---
+title: spring jms tracing 
+layout: post
+categories: springboot
+---
+
+<p>
+Spring Cloud Sleuth를 활용하여 jms를 tracing하는 예제를 알아보도록 하겠습니다.<br/>
+jms 설정과 spring cloud sleuth 설정까지 포함하면 길어지므로,<br/>
+jms 설정과 spring cloud sleuth 설정은 다른 예제를 참고 바랍니다.<br/>
+jms와 spring cloud sleuth를 설정한 이후, 아래와 같이 producer와 consumer를 설정해주도록 합니다.<br/>
+
+<pre><code>package org.shashaka.io;
+
+import brave.Tracing;
+import brave.propagation.ExtraFieldPropagation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.HttpStatus;
+import org.springframework.jms.annotation.JmsListener;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.jms.JMSException;
+import javax.jms.TextMessage;
+import java.util.UUID;
+
+@SpringBootApplication
+@Slf4j
+@RestController
+public class ArtemisApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(ArtemisApplication.class, args);
+    }
+
+    @Autowired
+    private JmsTemplate jmsTemplate;
+
+    @JmsListener(destination = JmsConfig.QUEUE_NAME, containerFactory = "jmsListenerContainerFactory")
+    public void test(TextMessage message) throws JMSException {
+        Tracing.currentTracer().startScopedSpan("JMS_SPAN");
+        ExtraFieldPropagation.set(LoggingIdConverter.LOG_ID, message.getStringProperty(LoggingIdConverter.LOG_ID));
+
+        log.info("received : {}", message.getText());
+    }
+
+    @PostMapping("/test")
+    @ResponseStatus(HttpStatus.OK)
+    public void addStr(@RequestBody String str) {
+
+        ExtraFieldPropagation.set(LoggingIdConverter.LOG_ID, UUID.randomUUID().toString());
+
+        log.info("send : {}", str);
+
+        jmsTemplate.send(JmsConfig.QUEUE_NAME, session -&gt; session.createTextMessage(str));
+    }
+}
+</code></pre>
+
+
+producer에서 queue로 보낼 때, spring cloud sleuth에서 custom한 log_id가 property로 같이 넘어가게 됩니다.<br/>
+consumer에서 해당 메세지를 받았을 때는 traceContext가 없기 때문에 <br/>
+Tracing.currentTracer().startScopedSpan("JMS_SPAN") 호출을 통해 traceContext를 새로이 만들어줍니다.<br/>
+이후에 ExtraFieldPropagation을 통해 message에서 받아온 log_id를 다시 설정해주도록 합니다.<br/>
+
+<pre><code>21:04:04.585 SLEUTH=[d2f314e1-7fa0-42c0-8bf0-134148c183c8], [http-nio-8080-exec-10] INFO  org.shashaka.io.ArtemisApplication - send : testStr
+
+21:04:04.585 SLEUTH=[d2f314e1-7fa0-42c0-8bf0-134148c183c8], [JMS_EXECUTOR_81] INFO  org.shashaka.io.ArtemisApplication - received : testStr
+</code></pre>
+
+위와 같이 log_id가 출력되는 것을 확인할 수 있습니다.<br/>
+</p>
+
