@@ -1,0 +1,80 @@
+---
+title: spring artemis config
+layout: post
+categories: springboot
+---
+
+<p>
+spring boot에서 activemq artemis를 설정하는 방법을 알아보도록 하겠습니다.<br/>
+ArtemisAutoConfiguration이 설정되어 있으면, application의 설정에 상관없이<br/>
+artemis가 enable되므로 아래와 같이 autoconfiguration을 꺼주도록 합니다.<br/>
+
+<pre><code>@SpringBootApplication(exclude = ArtemisAutoConfiguration.class)
+</code></pre>
+
+jms.enabled의 config값이 true인 경우만 artemis queue가 start되도록 아래와 같이 설정해주도록 합니다.
+
+<pre><code>package org.shashaka.io;
+
+import org.apache.activemq.artemis.api.core.RoutingType;
+import org.apache.activemq.artemis.core.config.CoreQueueConfiguration;
+import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
+import org.apache.activemq.artemis.core.server.ActiveMQServer;
+import org.apache.activemq.artemis.core.server.ActiveMQServers;
+import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
+import org.springframework.jms.config.JmsListenerContainerFactory;
+import org.springframework.jms.core.JmsTemplate;
+
+import javax.jms.ConnectionFactory;
+
+@Configuration
+@ConditionalOnProperty(name = "jms.enabled", havingValue = "true")
+public class JmsConfig {
+
+    public static final String QUEUE_NAME = "queue1";
+
+    @Bean
+    public ConnectionFactory jmsConnectionFactory() {
+        return new ActiveMQJMSConnectionFactory("vm://0");
+    }
+
+    @Bean
+    public JmsTemplate jmsTemplate(ConnectionFactory jmsConnectionFactory) {
+        return new JmsTemplate(jmsConnectionFactory);
+    }
+
+    @Bean
+    public JmsListenerContainerFactory jmsListenerContainerFactory(ConnectionFactory jmsConnectionFactory) {
+        DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
+        factory.setConcurrency("1-100");
+        factory.setConnectionFactory(jmsConnectionFactory);
+        return factory;
+    }
+
+
+    @Bean(initMethod = "start", destroyMethod = "stop")
+    public ActiveMQServer activeMQServer() throws Exception {
+        return ActiveMQServers.newActiveMQServer(configuration());
+    }
+
+    private org.apache.activemq.artemis.core.config.Configuration configuration() throws Exception {
+        return new ConfigurationImpl()
+                .setSecurityEnabled(false)
+                .setJMXManagementEnabled(false)
+                .addQueueConfiguration(new CoreQueueConfiguration()
+                        .setAddress("/queue/" + QUEUE_NAME)
+                        .setName(QUEUE_NAME)
+                        .setDurable(true)
+                        .setRoutingType(RoutingType.ANYCAST))
+                .addAcceptorConfiguration("in-vm", "vm://0");
+    }
+}
+</code></pre>
+
+connection과 executor 설정은 해당 서버의 사용 용도에 맞게 따로 설정해주도록 합니다.<br/>
+</p>
+
