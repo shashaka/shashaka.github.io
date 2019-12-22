@@ -1,0 +1,41 @@
+---
+title: spring artemis auto configuration
+layout: post
+categories: springboot
+---
+
+<p>
+spring boot에서 autoConfiguration을 이용해 activemq artemis를 설정하는 방법을 알아보도록 하겠습니다.<br/>
+먼저 아래와 같이 dependency를 추가해주도록 합니다.<br/>
+
+<pre><code>   compile group: 'org.springframework', name: 'spring-jms', version: '5.2.2.RELEASE'
+    compile group: 'org.apache.activemq', name: 'artemis-jms-server', version: '2.10.1'
+    compile group: 'org.messaginghub', name: 'pooled-jms', version: '1.1.0'
+    compile group: 'javax.json', name: 'javax.json-api', version: '1.1.4'
+</code></pre>
+
+이후, application.yml 파일에 아래와 같이 설정해줍니다.
+
+<pre><code>spring:
+  jms:
+    cache:
+      enabled: false
+    listener:
+      acknowledge-mode: auto
+      concurrency: 1
+      max-concurrency: 100
+  artemis:
+    embedded:
+      enabled: true
+      persistent: true
+      queues: queue1
+      data-directory: data
+    mode: embedded
+    pool:
+      enabled: true
+      max-connections: 100
+</code></pre>
+
+설정은 서버의 용도에 따라 변경해주도록 합니다.<br/>
+</p>
+
