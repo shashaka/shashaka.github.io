@@ -1,0 +1,198 @@
+---
+title: spring webclient log
+layout: post
+categories: springboot
+---
+
+<p>
+spring boot webclient에서 request와 response를 logging하는 방법을 알아보도록 하겠습니다.<br/>
+먼저 아래와 같이 logSupport가 가능하게 webClient를 설정해주도록 합니다.<br/>
+
+<pre><code>package org.shashaka.io;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.channel.BootstrapHandlers;
+import reactor.netty.http.client.HttpClient;
+
+@Configuration
+public class WebClientConfig {
+
+    @Bean
+    public WebClient webClient() {
+        return WebClient
+                .builder()
+                .clientConnector(new ReactorClientHttpConnector(HttpClient
+                        .create()
+                        .tcpConfiguration(
+                                tc -&gt; tc.bootstrap(
+                                        b -&gt; BootstrapHandlers.updateLogSupport(b, new CustomLogger(HttpClient.class))))))
+                .build();
+    }
+}
+</code></pre>
+
+그리고 아래와 같이 request와 response 호출시에 log가 되게 설정해주도록 합니다.<br/>
+같은 request와 response를 구분하기 위해 context에서 channel session id를 같이 출력해줍니다.<br/>
+
+<pre><code>package org.shashaka.io;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
+import io.netty.handler.logging.LoggingHandler;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
+
+import java.net.SocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+
+@Slf4j
+public class CustomLogger extends LoggingHandler {
+    public CustomLogger(Class&lt;?&gt; clazz) {
+        super(clazz);
+    }
+
+    @Override
+    protected String format(ChannelHandlerContext ctx, String event, Object arg) {
+        if (arg instanceof ByteBuf) {
+            ByteBuf msg = (ByteBuf) arg;
+            return msg.toString(StandardCharsets.UTF_8);
+        }
+        return super.format(ctx, event, arg);
+    }
+
+    @Override
+    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+
+        ctx.fireChannelRegistered();
+    }
+
+    @Override
+    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+
+
+        ctx.fireChannelUnregistered();
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+
+
+        ctx.fireChannelActive();
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+
+        ctx.fireChannelInactive();
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+
+        ctx.fireExceptionCaught(cause);
+    }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+
+        ctx.fireUserEventTriggered(evt);
+    }
+
+    @Override
+    public void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) throws Exception {
+
+        ctx.bind(localAddress, promise);
+    }
+
+    @Override
+    public void connect(
+            ChannelHandlerContext ctx,
+            SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise) throws Exception {
+
+        ctx.connect(remoteAddress, localAddress, promise);
+    }
+
+    @Override
+    public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
+
+        ctx.disconnect(promise);
+    }
+
+    @Override
+    public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
+
+        ctx.close(promise);
+    }
+
+    @Override
+    public void deregister(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
+
+        ctx.deregister(promise);
+    }
+
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+        ctx.fireChannelReadComplete();
+    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        log.info("postlog [{}] : {}", ctx.channel().id(), ((ByteBuf) msg).toString(StandardCharsets.UTF_8));
+
+        ctx.fireChannelRead(msg);
+    }
+
+    @Override
+    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+        String content = ((ByteBuf) msg).toString(StandardCharsets.UTF_8);
+        if (!StringUtils.isEmpty(content)) {
+            log.info(" prelog [{}] : {}", ctx.channel().id(), content);
+        }
+        ctx.write(msg, promise);
+    }
+
+    @Override
+    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+        ctx.fireChannelWritabilityChanged();
+    }
+
+    @Override
+    public void flush(ChannelHandlerContext ctx) throws Exception {
+        ctx.flush();
+    }
+
+}
+</code></pre>
+
+아래와 같이 log가 출력되는 것을 확인할 수 있습니다.<br/>
+
+<pre><code>23:04:39.032 [reactor-http-nio-1] INFO  org.shashaka.io.CustomLogger -  prelog [8d5c8ff2] : POST /v2/5e0600593300004900ec5c2c HTTP/1.1
+user-agent: ReactorNetty/0.9.2.RELEASE
+host: www.mocky.io
+accept: */*
+Content-Type: text/plain;charset=UTF-8
+content-length: 18
+
+{"request":"test"}
+23:04:39.376 [reactor-http-nio-1] INFO  org.shashaka.io.CustomLogger - postlog [8d5c8ff2] : HTTP/1.1 201 Created
+Server: Cowboy
+Connection: keep-alive
+Date: Fri, 27 Dec 2019 14:04:39 GMT
+Content-Type: application/json
+Content-Length: 15
+Via: 1.1 vegur
+
+{"test":"test"}
+
+</code></pre>
+
+
+설정은 서버의 용도에 따라 변경해주도록 합니다.<br/>
+</p>
+
