@@ -1,0 +1,130 @@
+---
+title: spring kafka
+layout: post
+categories: springboot
+---
+
+<p>
+spring boot에서 kafka 설정을 하는 방법을 알아보도록 하겠습니다.<br/>
+먼저 아래와 같이 config 설정을 해줍니다.
+
+- application.yml
+
+<pre><code>spring:
+  kafka:
+    bootstrap-servers: "{my_server_host}:9092"
+    consumer:
+      group-id: 0
+      auto-offset-reset: latest
+    listener:
+      missing-topics-fatal: false
+
+</code></pre>
+
+그리고 java config로 설정을 진행해줍니다.
+
+<pre><code>package org.shashaka.io;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaAdmin;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@Configuration
+@Slf4j
+public class KafkaConfig {
+
+    @Value("${spring.kafka.bootstrap-servers}")
+    private String kafkaServer;
+
+    public static final String MY_TOPIC = "myTopic";
+
+    @KafkaListener(topics = MY_TOPIC)
+    public void listen(String val) {
+        log.info("value : {}", val);
+    }
+
+    @Bean
+    public KafkaAdmin admin() {
+        Map&lt;String, Object&gt; configs = new HashMap&lt;&gt;();
+        configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);
+        return new KafkaAdmin(configs);
+    }
+
+    @Bean
+    public NewTopic topic1() {
+        return new NewTopic(MY_TOPIC, 10, (short) 2);
+    }
+
+    @Bean
+    public ProducerFactory&lt;String, String&gt; producerFactory() {
+        return new DefaultKafkaProducerFactory&lt;&gt;(producerConfigs());
+    }
+
+    @Bean
+    public Map&lt;String, Object&gt; producerConfigs() {
+        Map&lt;String, Object&gt; props = new HashMap&lt;&gt;();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        return props;
+    }
+
+    @Bean
+    public KafkaTemplate&lt;String, String&gt; kafkaTemplate() {
+        return new KafkaTemplate&lt;&gt;(producerFactory());
+    }
+}
+</code></pre>
+
+아래와 같이 API 호출을 해주면 해당 값이 kafka를 거쳐 출력되는 것을 확인할 수 있습니다.<br/>
+
+<pre><code>package org.shashaka.io;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@SpringBootApplication
+@Slf4j
+@RestController
+public class KafkaApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(KafkaApplication.class, args);
+    }
+
+    @Autowired
+    private KafkaTemplate&lt;String, String&gt; template;
+
+    @GetMapping("/test")
+    public void test(@RequestParam String val) {
+        template.send(KafkaConfig.MY_TOPIC, val);
+    }
+}
+</code></pre>
+
+<pre><code>14:52:08.277 [org.springframework.kafka.KafkaListenerEndpointContainer#0-0-C-1] INFO  org.shashaka.io.KafkaConfig - value : vaqfdwqfd
+</code></pre>
+
+
+설정은 서버의 용도에 따라 변경해주도록 합니다.<br/>
+</p>
+
