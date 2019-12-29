@@ -6,16 +6,16 @@ categories: springboot
 
 <p>
 activemq artemis와 kafka를 이용해 local queue와 remote queue를 동시에 쓰는 예제를 진행해보도록 하겠습니다.<br/>
-artemis [https://shashaka.github.io/springboot/2019/12/22/SPRING-ARTEMIS-AUTO-CONFIG.html]와 
-kafka [ https://shashaka.github.io/springboot/2019/12/28/SPRING-KAFKA.html ] 설정 참고 부탁드립니다.
-
-컨셉은 아래와 같습니다.
-1. request가 들어오면 서버 내 activemq로 enqueue
-2. activemq에서 다시 외부 kafka로 enqueue
-3. kafka에서 서버 activemq consumer가 dequeue
-4. activemq consumer가 마지막 처리
-
-해당 logic에서 kafka가 healthy 상황이 아닐 경우, 처리하는 logic을 추가해보도록 하겠습니다.
+artemis [https://shashaka.github.io/springboot/2019/12/22/SPRING-ARTEMIS-AUTO-CONFIG.html]와 <br/>
+kafka [ https://shashaka.github.io/springboot/2019/12/28/SPRING-KAFKA.html ] 설정 참고 부탁드립니다.<br/>
+<br/>
+컨셉은 아래와 같습니다.<br/>
+1. request가 들어오면 서버 내 activemq로 enqueue<br/>
+2. activemq에서 다시 외부 kafka로 enqueue<br/>
+3. kafka에서 서버 activemq consumer가 dequeue<br/>
+4. activemq consumer가 마지막 처리<br/>
+<br/>
+해당 logic에서 kafka가 healthy 상황이 아닐 경우, 처리하는 logic을 추가해보도록 하겠습니다.<br/>
 
 <pre><code>  @Bean
     public ProducerListener&lt;String, String&gt; kafkaProducerListener() {
@@ -29,13 +29,13 @@ kafka [ https://shashaka.github.io/springboot/2019/12/28/SPRING-KAFKA.html ] 설
     }
 </code></pre>
 
-위와 같이 ProducerListener를 선언해줍니다.
-kafka 설정에서 request.timeout.ms와 delivery.timeout.ms를 짧게 조정해주면 해당 시간 동안
-처리되지 못한 produce message에 대해서는 timeout exception이 발생하게 됩니다.
-해당 메세지는 kafka에 enqueue되지 않고 바로 activemq consumer에서 처리되게 됩니다.
-위 순서에서 1번 이후, 바로 4번으로 routing되게 됩니다.
-
-아래와 같이 적용되는 것을 확인할 수 있습니다.
+위와 같이 ProducerListener를 선언해줍니다.<br/>
+kafka 설정에서 request.timeout.ms와 delivery.timeout.ms를 짧게 조정해주면 해당 시간 동안<br/>
+처리되지 못한 produce message에 대해서는 timeout exception이 발생하게 됩니다.<br/>
+해당 메세지는 kafka에 enqueue되지 않고 바로 activemq consumer에서 처리되게 됩니다.<br/>
+위 순서에서 1번 이후, 바로 4번으로 routing되게 됩니다.<br/>
+<br/>
+아래와 같이 적용되는 것을 확인할 수 있습니다.<br/>
 
 <pre><code>
 // kafka 정상 동작시
