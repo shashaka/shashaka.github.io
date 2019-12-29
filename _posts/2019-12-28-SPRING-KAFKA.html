@@ -10,15 +10,10 @@ spring boot에서 kafka 설정을 하는 방법을 알아보도록 하겠습니�
 
 - application.yml
 
-<pre><code>spring:
-  kafka:
-    bootstrap-servers: "{my_server_host}:9092"
-    consumer:
-      group-id: 0
-      auto-offset-reset: latest
-    listener:
-      missing-topics-fatal: false
-
+<pre><code>kafka:
+  enabled: true
+  topic: myTopic
+  bootstrap-servers: "{serverhost}:{serverport}"
 </code></pre>
 
 그리고 java config로 설정을 진행해줍니다.
@@ -26,46 +21,62 @@ spring boot에서 kafka 설정을 하는 방법을 알아보도록 하겠습니�
 <pre><code>package org.shashaka.io;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.admin.AdminClientConfig;
-import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaAdmin;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.core.*;
+import org.springframework.kafka.support.ProducerListener;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
+@EnableKafka
 @Slf4j
+@ConditionalOnProperty(name = "kafka.enabled", havingValue = "true")
 public class KafkaConfig {
 
-    @Value("${spring.kafka.bootstrap-servers}")
+    @Value("${kafka.bootstrap-servers}")
     private String kafkaServer;
 
-    public static final String MY_TOPIC = "myTopic";
-
-    @KafkaListener(topics = MY_TOPIC)
+    @KafkaListener(id = "default", topics = "${kafka.topic}")
     public void listen(String val) {
         log.info("value : {}", val);
     }
 
     @Bean
-    public KafkaAdmin admin() {
-        Map&lt;String, Object&gt; configs = new HashMap&lt;&gt;();
-        configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);
-        return new KafkaAdmin(configs);
+    ConcurrentKafkaListenerContainerFactory&lt;String, String&gt;
+    kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory&lt;String, String&gt; factory =
+                new ConcurrentKafkaListenerContainerFactory&lt;&gt;();
+        factory.setConsumerFactory(consumerFactory());
+        return factory;
     }
 
     @Bean
-    public NewTopic topic1() {
-        return new NewTopic(MY_TOPIC, 10, (short) 2);
+    public ConsumerFactory&lt;String, String&gt; consumerFactory() {
+        return new DefaultKafkaConsumerFactory&lt;&gt;(consumerConfigs());
+    }
+
+    @Bean
+    public Map&lt;String, Object&gt; consumerConfigs() {
+        Map&lt;String, Object&gt; props = new HashMap&lt;&gt;();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "default");
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
+        props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "100");
+        props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "15000");
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        return props;
     }
 
     @Bean
@@ -77,6 +88,12 @@ public class KafkaConfig {
     public Map&lt;String, Object&gt; producerConfigs() {
         Map&lt;String, Object&gt; props = new HashMap&lt;&gt;();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);
+        props.put(ProducerConfig.RETRIES_CONFIG, 0);
+        props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
+        props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 33554432);
+        props.put(ProducerConfig.ACKS_CONFIG, "all");
+        props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 3000);
+        props.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, 3000);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         return props;
@@ -85,6 +102,16 @@ public class KafkaConfig {
     @Bean
     public KafkaTemplate&lt;String, String&gt; kafkaTemplate() {
         return new KafkaTemplate&lt;&gt;(producerFactory());
+    }
+
+    @Bean
+    public ProducerListener&lt;Object, Object&gt; kafkaProducerListener() {
+        return new ProducerListener&lt;Object, Object&gt;() {
+            @Override
+            public void onError(String topic, Integer partition, Object key, Object value, Exception exception) {
+                log.error("ProducerListener  {} {}", key, value);
+            }
+        };
     }
 }
 </code></pre>
