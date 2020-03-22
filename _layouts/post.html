@@ -9,11 +9,11 @@ ads: true
 <div id="main">
 	<!-- Post -->
 	<article class="shade-two">
-	{% include advertisement_coupang.html %}
 	  <div class="container">
 			<header>
 				<h2>{{- page.title -}}</h2>
 				<p>{% if page.author %}{{ page.author }}, {% endif %}{{- page.date | date_to_long_string -}}</p>
+				{% include advertisement_coupang.html %}
 			</header>
 	    {{- content -}}
 		  {% include advertisement.html %}
