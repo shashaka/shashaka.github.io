@@ -12,7 +12,19 @@ artemis가 enable되므로 아래와 같이 autoconfiguration을 꺼주도록 �
 <pre><code>@SpringBootApplication(exclude = ArtemisAutoConfiguration.class)
 </code></pre>
 
-jms.enabled의 config값이 true인 경우만 artemis queue가 start되도록 아래와 같이 설정해주도록 합니다.
+그리고 아래와 같이 dependency를 추가해주도록 합니다.
+
+<pre><code> compile group: 'org.springframework.boot', name: 'spring-boot-starter-web'
+
+    compile group: 'org.springframework', name: 'spring-jms', version: '5.2.5.RELEASE'
+    compile group: 'org.apache.activemq', name: 'artemis-jms-server', version: '2.11.0'
+    compile group: 'org.apache.activemq', name: 'activemq-pool', version: '5.15.12'
+
+    compile group: 'ch.qos.logback', name: 'logback-core', version: '1.2.3'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+</code></pre>
 
 <pre><code>package org.shashaka.io;
 
@@ -22,7 +34,7 @@ import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.ActiveMQServers;
 import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
@@ -30,31 +42,12 @@ import org.springframework.jms.config.JmsListenerContainerFactory;
 import org.springframework.jms.core.JmsTemplate;
 
 import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
 
 @Configuration
-@ConditionalOnProperty(name = "jms.enabled", havingValue = "true")
 public class JmsConfig {
 
     public static final String QUEUE_NAME = "queue1";
-
-    @Bean
-    public ConnectionFactory jmsConnectionFactory() {
-        return new ActiveMQJMSConnectionFactory("vm://0");
-    }
-
-    @Bean
-    public JmsTemplate jmsTemplate(ConnectionFactory jmsConnectionFactory) {
-        return new JmsTemplate(jmsConnectionFactory);
-    }
-
-    @Bean
-    public JmsListenerContainerFactory jmsListenerContainerFactory(ConnectionFactory jmsConnectionFactory) {
-        DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
-        factory.setConcurrency("1-100");
-        factory.setConnectionFactory(jmsConnectionFactory);
-        return factory;
-    }
-
 
     @Bean(initMethod = "start", destroyMethod = "stop")
     public ActiveMQServer activeMQServer() throws Exception {
@@ -65,12 +58,60 @@ public class JmsConfig {
         return new ConfigurationImpl()
                 .setSecurityEnabled(false)
                 .setJMXManagementEnabled(false)
+                .setEnabledAsyncConnectionExecution(true)
+                .setPersistenceEnabled(true)
+                .setThreadPoolMaxSize(100)
+                .setGlobalMaxSize(4000000)
                 .addQueueConfiguration(new CoreQueueConfiguration()
                         .setAddress("/queue/" + QUEUE_NAME)
                         .setName(QUEUE_NAME)
-                        .setDurable(true)
+                        .setDurable(false)
                         .setRoutingType(RoutingType.ANYCAST))
                 .addAcceptorConfiguration("in-vm", "vm://0");
+    }
+
+
+    @Bean
+    public ConnectionFactory jmsConnectionFactory(ActiveMQServer activeMQServer) {
+        ActiveMQJMSConnectionFactory factory = new ActiveMQJMSConnectionFactory("vm://0");
+        factory.setBlockOnAcknowledge(false);
+        factory.setBlockOnDurableSend(false);
+        factory.setBlockOnNonDurableSend(false);
+        factory.setCacheDestinations(true);
+        factory.setCompressLargeMessage(true);
+        factory.setConfirmationWindowSize(1000000);
+        factory.setThreadPoolMaxSize(100);
+
+        PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
+        pooledConnectionFactory.setConnectionFactory(factory);
+        pooledConnectionFactory.setBlockIfSessionPoolIsFull(true);
+        pooledConnectionFactory.setBlockIfSessionPoolIsFullTimeout(10000);
+        pooledConnectionFactory.setCreateConnectionOnStartup(true);
+        pooledConnectionFactory.setMaxConnections(200);
+        pooledConnectionFactory.setReconnectOnException(true);
+        pooledConnectionFactory.setExpiryTimeout(60000);
+
+        return pooledConnectionFactory;
+    }
+
+
+    @Bean
+    public JmsTemplate jmsTemplate(ConnectionFactory jmsConnectionFactory) {
+        JmsTemplate jmsTemplate = new JmsTemplate(jmsConnectionFactory);
+        jmsTemplate.setDeliveryMode(DeliveryMode.PERSISTENT);
+        jmsTemplate.setMessageIdEnabled(false);
+        jmsTemplate.setExplicitQosEnabled(false);
+        jmsTemplate.setPubSubNoLocal(false);
+        jmsTemplate.setSessionTransacted(false);
+        return jmsTemplate;
+    }
+
+    @Bean
+    public JmsListenerContainerFactory jmsListenerContainerFactory(ConnectionFactory jmsConnectionFactory) {
+        DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
+        factory.setConcurrency("30-30");
+        factory.setConnectionFactory(jmsConnectionFactory);
+        return factory;
     }
 }
 </code></pre>
