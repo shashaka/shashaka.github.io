@@ -40,9 +40,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerContainerFactory;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
+import javax.jms.Session;
 
 @Configuration
 public class JmsConfig {
@@ -61,7 +63,10 @@ public class JmsConfig {
                 .setEnabledAsyncConnectionExecution(true)
                 .setPersistenceEnabled(true)
                 .setThreadPoolMaxSize(100)
+                .setScheduledThreadPoolMaxSize(20)
                 .setGlobalMaxSize(4000000)
+                .setGracefulShutdownEnabled(true)
+                .setGracefulShutdownTimeout(600000)
                 .addQueueConfiguration(new CoreQueueConfiguration()
                         .setAddress("/queue/" + QUEUE_NAME)
                         .setName(QUEUE_NAME)
@@ -72,7 +77,31 @@ public class JmsConfig {
 
 
     @Bean
-    public ConnectionFactory jmsConnectionFactory(ActiveMQServer activeMQServer) {
+    public ConnectionFactory providerConnectionFactory(ActiveMQServer activeMQServer) {
+        ActiveMQJMSConnectionFactory factory = new ActiveMQJMSConnectionFactory("vm://0");
+        factory.setBlockOnAcknowledge(false);
+        factory.setBlockOnDurableSend(false);
+        factory.setBlockOnNonDurableSend(false);
+        factory.setCacheDestinations(true);
+        factory.setCompressLargeMessage(true);
+        factory.setConfirmationWindowSize(1000000);
+        factory.setThreadPoolMaxSize(100);
+
+        PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
+        pooledConnectionFactory.setConnectionFactory(factory);
+        pooledConnectionFactory.setBlockIfSessionPoolIsFull(true);
+        pooledConnectionFactory.setBlockIfSessionPoolIsFullTimeout(10000);
+        pooledConnectionFactory.setReconnectOnException(true);
+        pooledConnectionFactory.setCreateConnectionOnStartup(true);
+        pooledConnectionFactory.setIdleTimeout(30000);
+        pooledConnectionFactory.setExpiryTimeout(60000);
+        pooledConnectionFactory.setMaxConnections(100);
+
+        return pooledConnectionFactory;
+    }
+
+    @Bean
+    public ConnectionFactory consumerConnectionFactory(ActiveMQServer activeMQServer) {
         ActiveMQJMSConnectionFactory factory = new ActiveMQJMSConnectionFactory("vm://0");
         factory.setBlockOnAcknowledge(false);
         factory.setBlockOnDurableSend(false);
@@ -87,30 +116,32 @@ public class JmsConfig {
         pooledConnectionFactory.setBlockIfSessionPoolIsFull(true);
         pooledConnectionFactory.setBlockIfSessionPoolIsFullTimeout(10000);
         pooledConnectionFactory.setCreateConnectionOnStartup(true);
-        pooledConnectionFactory.setMaxConnections(200);
+        pooledConnectionFactory.setIdleTimeout(30000);
+        pooledConnectionFactory.setMaxConnections(100);
         pooledConnectionFactory.setReconnectOnException(true);
         pooledConnectionFactory.setExpiryTimeout(60000);
-
         return pooledConnectionFactory;
     }
 
 
     @Bean
-    public JmsTemplate jmsTemplate(ConnectionFactory jmsConnectionFactory) {
-        JmsTemplate jmsTemplate = new JmsTemplate(jmsConnectionFactory);
+    public JmsTemplate jmsTemplate(ConnectionFactory providerConnectionFactory) {
+        JmsTemplate jmsTemplate = new JmsTemplate(providerConnectionFactory);
         jmsTemplate.setDeliveryMode(DeliveryMode.PERSISTENT);
         jmsTemplate.setMessageIdEnabled(false);
-        jmsTemplate.setExplicitQosEnabled(false);
+        jmsTemplate.setExplicitQosEnabled(true);
         jmsTemplate.setPubSubNoLocal(false);
         jmsTemplate.setSessionTransacted(false);
         return jmsTemplate;
     }
 
     @Bean
-    public JmsListenerContainerFactory jmsListenerContainerFactory(ConnectionFactory jmsConnectionFactory) {
+    public JmsListenerContainerFactory jmsListenerContainerFactory(ConnectionFactory consumerConnectionFactory) {
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
         factory.setConcurrency("30-30");
-        factory.setConnectionFactory(jmsConnectionFactory);
+        factory.setConnectionFactory(consumerConnectionFactory);
+        factory.setCacheLevel(DefaultMessageListenerContainer.CACHE_CONSUMER);
+        factory.setSessionAcknowledgeMode(Session.DUPS_OK_ACKNOWLEDGE);
         return factory;
     }
 }
