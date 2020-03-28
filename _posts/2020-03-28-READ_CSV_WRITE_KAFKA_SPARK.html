@@ -24,44 +24,47 @@ libraryDependencies += "org.apache.spark" %% "spark-sql-kafka-0-10" % "2.4.5"
 
 <pre><code>package org.shashaka.io
 
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
-import org.apache.spark.sql.{Row, SQLContext}
+import org.apache.spark.sql.types.{MapType, StringType, StructType}
+import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
 
 object SparkKafkaProducer {
   def main(args: Array[String]) {
 
-    System.setProperty("hadoop.home.dir", "winutils_file_location")
+    System.setProperty("hadoop.home.dir", "C:\\hadoop")
 
-    val conf = new SparkConf().setAppName("kafkaWriter")
-    conf.setMaster("local")
+    val conf = new SparkConf().setAppName("kafkaWriter").setMaster("local")
 
     val sc = new SparkContext(conf)
 
-    val sqlContext = new SQLContext(sc)
+    val sqlContext = SparkSession.builder().config(conf).getOrCreate()
 
-    val squidString = sc.textFile("test_location.csv")
+    val fileRows = sc.textFile("C:\\test.csv")
 
-    val squidHeader = "time duration client_add result_code bytes"
+    val schema = new StructType()
+      .add("name", StringType)
+      .add("duration", StringType)
+      .add("client_add", StringType)
+      .add("result_code", StringType)
+      .add("bytes", MapType(StringType, StringType))
 
-    val schema = StructType(squidHeader.split(" ").map(fieldName => StructField(fieldName, StringType, true)))
-
-    val rowRDD = squidString.map(_.split(",")).map(x => Row(x(0), x(1), x(2), x(3), x(4)))
+    val rowRDD = fileRows.map(_.split(",")).map(x => Row(x(0), x(1), x(2), x(3), Map("test" -> x(4))))
 
     val squidDF = sqlContext.createDataFrame(rowRDD, schema).toJSON
-
 
     squidDF
       .repartition(4)
       .write
       .format("kafka")
       .option("topic", "test")
-      .option("kafka.bootstrap.servers", "kafkahost:9092")
+      .option("kafka.bootstrap.servers", "kafka_host:9092")
       .save()
 
     sc.stop()
   }
 }
+
+
 </code></pre>
 
 아래와 같이 csv파일을 읽어, kafka에 json 형태로 출력되는 것을 확인할 수 있습니다.<br/>
