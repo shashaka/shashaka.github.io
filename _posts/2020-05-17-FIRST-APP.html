@@ -12,7 +12,6 @@ spark는 현재 최신 버전인 2.4.5를 사용하도록 하겠습니다.<br/>
 가장 먼저 아래와 같이 build.sbt를 작성해주도록 합니다.<br/>
 <br/>
 - build.sbt<br/>
-<br/>
 <pre><code>name := "spark-application-example"
 version := "0.1-SNAPSHOT"
 scalaVersion := "2.11.12"
@@ -42,7 +41,6 @@ scalacOptions ++= List("-feature", "-deprecation", "-unchecked", "-Xlint")
 testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l",
   "org.scalatest.tags.Slow", "-u", "target/junit-xml-reports", "-oD", "-eS")
 </code></pre>
-<br/>
 그리고 아래와 같이 FirstApp.scala를 작성해 기본적인 dataframe을 생성해주도록 합니다.<br/>
 <br/>
 <pre><code>package org.shashaka.test
@@ -70,7 +68,6 @@ object DataFrameExample extends Serializable {
   }
 }
 </code></pre>
-<br/>
 아래와 같이 결과값이 표시되는 것을 확인할 수 있습니다.<br/>
 <br/>
 <pre><code>+----------+---------+
@@ -80,5 +77,7 @@ object DataFrameExample extends Serializable {
 |testAuthor| testBook|
 +----------+---------+
 </code></pre>
+
+
 </p>
 
