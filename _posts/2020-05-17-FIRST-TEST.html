@@ -9,6 +9,7 @@ scalatest를 이용하여, spark app을 테스트하는 예제를 작성해보�
 기본 템플릿은 이전 create first app을 참고 부탁드립니다.<br/>
 기존에 만들어진 FirstApp을 기반으로, scalatest를 작성해보도록 합니다.<br/>
 가장 먼저 test실행시 사용할 BaseSpec을 작성해주도록 합니다.<br/>
+<br/>
 - BaseSpec.scala<br/>
 <pre><code>package org.shashaka.test
 
@@ -40,7 +41,7 @@ abstract class BaseSpec extends AnyFlatSpec with BeforeAndAfterEach with Matcher
 
 test code 작성시 toDF()를 사용하기 위해, 위와 같이 testImplicits를 작성해 test code에서 호출할 수 있도록 만들어줍니다.<br/>
 이후, FirstAppTest를 아래와 같이 작성해주도록 합니다.<br/>
-
+<br/>
 -FirstAppTest.scala<br/>
 <pre><code>package org.shashaka.test
 
@@ -63,7 +64,7 @@ class FirstAppTest extends BaseSpec {
 </code></pre>
 
 해당 코드를 실행하면 정상적으로 테스트가 통과되는 것을 확인할 수 있습니다.<br/>
-
+<br/>
 해당 예제는 <br/>
 https://github.com/FVBros/Spark-The-Definitive-Guide/tree/master/project-templates/scala<br/>
 를 참고하여 작성하였습니다.<br/>
