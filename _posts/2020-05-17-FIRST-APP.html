@@ -1,0 +1,84 @@
+---
+title: create first app
+layout: post
+categories: spark
+---
+
+<p>
+scala언어를 이용해, 가장 기본적인 application 예제를 생성해보도록 하겠습니다.<br/>
+maven이나 gradle과 같은 build tool로는 널리 사용되고 있는 sbt를 사용하고,<br/>
+spark는 현재 최신 버전인 2.4.5를 사용하도록 하겠습니다.<br/>
+<br/>
+가장 먼저 아래와 같이 build.sbt를 작성해주도록 합니다.<br/>
+<br/>
+- build.sbt<br/>
+<br/>
+<pre><code>name := "spark-application-example"
+version := "0.1-SNAPSHOT"
+scalaVersion := "2.11.12"
+
+// Spark Information
+val sparkVersion = "2.4.5"
+
+resolvers += DefaultMavenRepository
+resolvers += Resolver.bintrayRepo("spark-packages", "maven")
+resolvers += Resolver.typesafeRepo("releases")
+
+// Spark
+libraryDependencies += "org.apache.spark" %% "spark-core" % sparkVersion
+libraryDependencies += "org.apache.spark" %% "spark-sql" % sparkVersion
+libraryDependencies += "graphframes" % "graphframes" % "0.8.0-spark2.4-s_2.11"
+
+// Test
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.2" % Test
+libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.3" % Test
+
+// Logging
+libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.13.3"
+libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.13.3"
+
+scalacOptions ++= List("-feature", "-deprecation", "-unchecked", "-Xlint")
+
+testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l",
+  "org.scalatest.tags.Slow", "-u", "target/junit-xml-reports", "-oD", "-eS")
+</code></pre>
+<br/>
+그리고 아래와 같이 FirstApp.scala를 작성해 기본적인 dataframe을 생성해주도록 합니다.<br/>
+<br/>
+<pre><code>package org.shashaka.test
+
+import org.apache.spark.sql.SparkSession
+
+object DataFrameExample extends Serializable {
+  def main(args: Array[String]) = {
+
+    val spark = SparkSession
+      .builder()
+      .appName("FirstApp Spark Example")
+      .master("local[2]")
+      .getOrCreate()
+    import spark.implicits._
+
+    val authors = Seq("shashaka,test", "testAuthor, testBook")
+    val authorsDF = spark
+      .sparkContext
+      .parallelize(authors)
+      .toDF("value")
+      .selectExpr("split(value, ',') as values")
+      .selectExpr("values[0] as name", "values[1] as book")
+      .show()
+  }
+}
+</code></pre>
+<br/>
+아래와 같이 결과값이 표시되는 것을 확인할 수 있습니다.<br/>
+<br/>
+<pre><code>+----------+---------+
+|      name|     book|
++----------+---------+
+|  shashaka|     test|
+|testAuthor| testBook|
++----------+---------+
+</code></pre>
+</p>
+
