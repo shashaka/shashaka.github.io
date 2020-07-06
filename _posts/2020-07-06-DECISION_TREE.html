@@ -1,0 +1,41 @@
+---
+title: DecisionTreeClassifier 예제
+layout: post
+categories: data_mining
+---
+
+<p>
+sklearn.datasets의 dataSet을 이용하여, DecisionTreeClassifier로 data를 예측하는 예제를 만들어보도록 하겠습니다.<br/>
+<br/>
+- init.py<br/>
+<pre><code>from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.datasets import load_wine
+from sklearn.metrics import accuracy_score
+
+#load_wine()으로 wine data를 받아오도록 합니다.
+wine_data = load_wine()
+
+#train_test_split를 통해 Data를 traing용과 test용으로 나누어줍니다.
+#명시하지 않은 경우, 기본 비율은 0.75:0.25 입니다.
+X_train, X_test, y_train, y_test = train_test_split(wine_data.data, wine_data.target, random_state=1)
+
+#DecisionTreeClassifier를 만들어줍니다.
+classifier = DecisionTreeClassifier(random_state=1)
+
+#training data로 classifier를 훈련시켜줍니다.
+classifier.fit(X_train, y_train)
+
+#훈련된 모델로 X_test의 값을 넣었을 때의 결과 값을 받아옵니다.
+predict = classifier.predict(X_test)
+
+#accuracy_score로 실제값과 예상값이 얼마나 매칭되는지 확인할 수 있습니다.
+print('accuracy score {}'.format(accuracy_score(predict, y_test)))
+</code></pre>
+
+해당 코드를 실행하면 정상적으로 아래와 같이 출력되는 것을 확인할 수 있습니다.<br/>
+<pre><code>accuracy score 0.9555555555555556
+</code></pre>
+<br/>
+</p>
+
