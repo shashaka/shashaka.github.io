@@ -1,0 +1,45 @@
+---
+title: Precision Score
+layout: post
+categories: datamining
+---
+
+<p>
+sklearn.metrics의 precision_score 이용하여 precsion을 계산해보도록 하겠습니다.<br/>
+먼저 아래의 그림을 통해 precision의 개념에 대해서 알아보도록 하겠습니다.<br/>
+
+<a href="#" class="image featured"><img src="assets/images/true_positive.jpg" alt="" /></a>
+
+classifier를 통해 해당 값이 우리가 구분하려는 카테고리에 속하는 것은 positive, 아닌 것은 negative로 표현하도록 합니다.<br/>
+그 중에 실제 값으로 속하는 값은 그림에서 relavant elements로 표현됩니다.<br/>
+classifier가 positive로 판단하면서 실제로 positive인 값은 true positive<br/>
+classifier가 positive로 판단하면서 실제로 negative인 값은 false positive<br/>
+classifier가 negative로 판단하면서 실제로 negative인 값은 true negative<br/>
+classifier가 negative로 판단하면서 실제로 positive인 값은 false negative<br/>
+와 같이 표현할 수 있습니다.<br/>
+표현한 모양을 자세히 살펴보면 앞에 붙는 true와 false인 뒤에 따라오는 값이 classifier가 예측한 값과 실제 값이 동일한 경우에는 true, 아닌 경우에는 false인 것을 알 수 있습니다.<br/>
+precision은 classifier가 예측한 positive 중 실제로 맞춘 값의 비율로 나타내어집니다.<br/>
+아래의 수식과 같이 정리할 수 있습니다.<br/>
+<pre><code>precision = TP / TP + FP</code></pre>
+
+sklearn 라이브러리를 통해서 아래와 같이 classifier에 대한 precision을 구할 수 있습니다.<br/>
+<br/>
+- init.py<br/>
+<pre><code>from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import precision_score
+from sklearn.datasets import load_wine
+
+wine_data = load_wine()
+X_train, X_test, y_train, y_test = train_test_split(wine_data.data, wine_data.target, random_state=1)
+estimater = DecisionTreeClassifier()
+estimater.fit(X_train, y_train)
+predict = estimater.predict(X_test)
+print('precsion score : {}'.format(precision_score(predict, y_test, average='micro')))
+</code></pre>
+
+해당 코드를 실행하면 정상적으로 아래와 같이 출력되는 것을 확인할 수 있습니다.<br/>
+<pre><code>precsion score : 0.9555555555555556
+</code></pre>
+</p>
+
