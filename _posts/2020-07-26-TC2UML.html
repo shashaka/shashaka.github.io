@@ -1,0 +1,199 @@
+---
+title: WebMvcTest to PlantUML (1)
+layout: post
+categories: springboot
+---
+
+<p>
+이번은 MockMvc 필터와 Mockito의 mock을 이용하여, WebMvcTest를 parsing하여 PlantUML을 생성하는 예제를 진행해보도록 하겠습니다.<br/>
+<br/>
+먼저 아래와 같이 필터를 선언해주도록 합니다.<br/>
+
+<pre><code>package org.shashaka.io.uml.filter;
+
+import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.shashaka.io.uml.model.ApiModel;
+import org.shashaka.io.uml.utils.UmlGenerator;
+import org.springframework.mock.web.MockHttpServletRequest;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+
+@Slf4j
+@AllArgsConstructor
+public class UmlDocFilter implements Filter {
+
+    private final UmlGenerator umlGenerator;
+
+    @SneakyThrows
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) {
+
+        MockHttpServletRequest mockHttpServletRequest = (MockHttpServletRequest) request;
+
+        ApiModel apiModel = new ApiModel();
+        apiModel.setMethod(mockHttpServletRequest.getMethod());
+        apiModel.setUrl(mockHttpServletRequest.getRequestURI());
+        umlGenerator.addApi(apiModel);
+
+        chain.doFilter(request, response);
+    }
+}
+</code></pre>
+
+위에서 umlGenerator.addApi(apiModel) 부분은 UML을 생성할 때 사용할 데이터를 담은 객체입니다.<br/>
+모든 내용을 객체로 생성하여 담은 이후에 해당 값을 이용해서 uml document를 생성해주도록 합니다.<br/>
+MockMvc filter에서는 현재 수행된 API의 HttpMethod와 URL을 파싱하여 저장해도록 합니다.<br/>
+<br/>
+그 다음, 아래와 같이 restTemplate Mock을 생성하여 restTemplate이 호출될 때 값을 읽어오도록 합니다.<br/>
+지금은 편의상 configuration 소스에서 mockMvc 생성과 mock restTemplate 설정을 동시에 해주었습니다.<br/>
+
+<pre><code>package org.shashaka.io.uml;
+
+import lombok.extern.slf4j.Slf4j;
+import org.mockito.Mockito;
+import org.mockito.internal.creation.MockSettingsImpl;
+import org.mockito.internal.invocation.InterceptedInvocation;
+import org.mockito.invocation.InvocationOnMock;
+import org.shashaka.io.uml.filter.UmlDocFilter;
+import org.shashaka.io.uml.model.ApiModel;
+import org.shashaka.io.uml.utils.UmlGenerator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpMethod;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
+import org.springframework.web.client.RestTemplate;
+
+import java.net.URI;
+import java.net.URL;
+
+@TestConfiguration
+@Slf4j
+@ComponentScan
+public class UmlDocConfig {
+
+    @Autowired
+    private UmlGenerator umlGenerator;
+
+    @Bean
+    public MockMvc mockMvc(DefaultMockMvcBuilder builder) {
+        return builder
+                .addFilters(new UmlDocFilter(umlGenerator))
+                .build();
+    }
+
+    @Primary
+    @Bean
+    public RestTemplate restTemplate() {
+        return Mockito.mock(RestTemplate.class,
+                new MockSettingsImpl<>()
+                        .defaultAnswer(InvocationOnMock::getMock)
+                        .invocationListeners(methodInvocationReport -> {
+
+                            ApiModel apiModel = new ApiModel();
+
+                            HttpMethod httpMethod;
+                            String url = null;
+                            if (methodInvocationReport != null) {
+                                InterceptedInvocation invocation = (InterceptedInvocation) methodInvocationReport.getInvocation();
+                                if (invocation != null && invocation.getArguments() != null) {
+                                    httpMethod = getHttpMethod(invocation.getMethod().getName(), invocation.getArguments());
+                                    for (Object argument : invocation.getArguments()) {
+                                        if (argument instanceof String) {
+                                            String str = (String) argument;
+                                            if (str.contains("http")) {
+                                                url = str;
+                                            }
+                                        } else if (argument instanceof URI) {
+                                            url = argument.toString();
+                                        } else if (argument instanceof URL) {
+                                            url = argument.toString();
+                                        }
+                                    }
+                                    if (httpMethod != null && url != null) {
+                                        apiModel.setMethod(httpMethod.name());
+                                        apiModel.setUrl(url);
+                                        umlGenerator.addServiceCall(apiModel);
+                                    }
+                                }
+                            }
+                        }));
+    }
+
+    private HttpMethod getHttpMethod(String name, Object[] arguments) {
+        if (name.toLowerCase().contains("post")) {
+            return HttpMethod.POST;
+        } else if (name.toLowerCase().contains("put")) {
+            return HttpMethod.PUT;
+        } else if (name.toLowerCase().contains("get")) {
+            return HttpMethod.GET;
+        } else if (name.toLowerCase().contains("delete")) {
+            return HttpMethod.DELETE;
+        } else if (name.toLowerCase().contains("exchange")) {
+            for (Object argument : arguments) {
+                if (argument instanceof HttpMethod) {
+                    return (HttpMethod) argument;
+                }
+            }
+        }
+        return null;
+    }
+
+}
+</code></pre>
+
+아래는 uml을 생성하는 객체에 데이터를 저장할 UmlGenerator입니다.<br/>
+addApi 메서드와 addServiceCall를 나누어 선언하였습니다.<br/>
+실제 Test 수행시에는 sequential 하게 Test가 실행될 것이므로, MockMvc를 통해 현재 API를 선언하고 addServiceCall을 통해 해당 API에 외부 API 호출을 추가해줍니다.<br/>
+이후, getUmlDocument 메서드 호출을 통해 현재 parsing된 객체를 확인할 수 있습니다.<br/>
+
+<pre><code>package org.shashaka.io.uml.utils;
+
+import org.shashaka.io.uml.model.ApiModel;
+import org.shashaka.io.uml.model.UmlDocument;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Component
+public class UmlGenerator {
+
+    private static UmlDocument umlDocument = new UmlDocument();
+
+    private static ApiModel api;
+
+    public void addApi(ApiModel apiModel) {
+        List<ApiModel> apiModels = umlDocument.getApiModels();
+        if (apiModels == null) {
+            apiModels = new ArrayList<>();
+            umlDocument.setApiModels(apiModels);
+        }
+        apiModels.add(apiModel);
+        api = apiModel;
+    }
+
+    public void addServiceCall(ApiModel apiModel) {
+        List<ApiModel> serviceCalls = api.getServiceCalls();
+        if (serviceCalls == null) {
+            serviceCalls = new ArrayList<>();
+            api.setServiceCalls(serviceCalls);
+        }
+        serviceCalls.add(apiModel);
+    }
+
+    public UmlDocument getUmlDocument() {
+        return umlDocument;
+    }
+}
+</code></pre>
+</p>
+
