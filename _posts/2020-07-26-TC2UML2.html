@@ -1,0 +1,163 @@
+---
+title: WebMvcTest to PlantUML (2)
+layout: post
+categories: springboot
+---
+
+<p>
+이번은 저장된 ApiModel 객체를 이용하여 PlantUML document를 생성하는 예제를 진행해보도록 하겠습니다.<br/>
+<br/>
+기존에 만들어진 umlGenerator 파일에 아래와 같이 method를 생성해주도록 합니다.<br/>
+
+<pre><code> @SneakyThrows
+    public UmlDocument writeUmlDocument() {
+
+        StringBuilder builder = new StringBuilder();
+
+        for (ApiModel apiModel : umlDocument.getApiModels()) {
+            String fileName = apiModel.getMethod() + "_" + apiModel.getUrl().replace("/", "_");
+            builder.append("@startuml\n");
+            builder.append("title ").append(fileName).append("\\n\n");
+
+            builder.append("User -> ")
+                    .append(umlDocument.getName())
+                    .append(" : ")
+                    .append(apiModel.getMethod())
+                    .append(" ")
+                    .append(apiModel.getUrl())
+                    .append("\n");
+
+            for (ApiModel serviceCall : apiModel.getServiceCalls()) {
+                builder.append(umlDocument.getName())
+                        .append(" -> ")
+                        .append(URI.create(serviceCall.getUrl()).getHost())
+                        .append(" : ")
+                        .append(serviceCall.getMethod())
+                        .append(" ")
+                        .append(serviceCall.getUrl())
+                        .append("\n");
+            }
+
+            builder.append("@enduml");
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+                writer.write(builder.toString());
+                builder.setLength(0);
+            } catch (Exception e) {
+                log.error("exception :", e);
+            }
+        }
+        return umlDocument;
+    }
+</code></pre>
+
+writeUmlDocument 메서드는 저장된 ApiModel 객체를 PlantUML 포맷의 document로 변환해주는 역할을 합니다.<br/>
+아래와 같이 test code에서 해당 메서드를 통해 실행시켜주도록 합니다.<br/>
+
+<pre><code>package org.shashaka.io;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.shashaka.io.model.PostInfo;
+import org.shashaka.io.model.PostPrivateInfo;
+import org.shashaka.io.model.PostRequest;
+import org.shashaka.io.uml.UmlDocConfig;
+import org.shashaka.io.uml.utils.UmlGenerator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.client.RestTemplate;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+
+@Slf4j
+@WebMvcTest
+@Import(UmlDocConfig.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class SwaggerUmlPostControllerTest {
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Autowired
+    private UmlGenerator umlGenerator;
+
+    @AfterAll
+    public void last() {
+        umlGenerator.writeUmlDocument();
+    }
+
+    @Test
+    public void post_test() throws Exception {
+
+        when(restTemplate.getForObject(anyString(), any())).thenReturn("");
+
+        PostRequest request = new PostRequest();
+        request.setName("name");
+        PostInfo postInfo = new PostInfo();
+        PostPrivateInfo postPrivateInfo = new PostPrivateInfo();
+        postPrivateInfo.setPrivateName("privateName");
+        postInfo.setPostPrivateInfo(postPrivateInfo);
+        request.setPostInfo(postInfo);
+        String body = objectMapper.writeValueAsString(request);
+
+        mockMvc.perform(
+                post("/swagger/post/1?first=myFirst&latest=myLatest")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body.getBytes()))
+                .andDo(print())
+                .andExpect(content().json("{\"name\":\"namemyLatestmyFirst\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void get_test() throws Exception {
+
+        when(restTemplate.getForObject(anyString(), any())).thenReturn("");
+
+        PostRequest request = new PostRequest();
+        request.setName("name");
+        PostInfo postInfo = new PostInfo();
+        PostPrivateInfo postPrivateInfo = new PostPrivateInfo();
+        postPrivateInfo.setPrivateName("privateName");
+        postInfo.setPostPrivateInfo(postPrivateInfo);
+        request.setPostInfo(postInfo);
+        String body = objectMapper.writeValueAsString(request);
+
+        mockMvc.perform(
+                get("/swagger/post/1?first=myFirst&latest=myLatest")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body.getBytes()))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+}
+</code></pre>
+
+TC 수행을 통해 생성된 파일을 visualization하면 아래와 깉은 UML이 됩니다.<br/>
+
+<br/>
+<img src="{{ 'assets/images/swagger_post_1.png' | relative_url }}" alt="" width="500" height="400"/>
+<br/>
+<img src="{{ 'assets/images/swagger_post_2.png' | relative_url }}" alt="" width="500" height="400"/>
+<br/>
+</p>
+
