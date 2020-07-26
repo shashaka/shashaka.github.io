@@ -94,7 +94,7 @@ public class UmlDocConfig {
     @Bean
     public RestTemplate restTemplate() {
         return Mockito.mock(RestTemplate.class,
-                new MockSettingsImpl<>()
+                new MockSettingsImpl()
                         .defaultAnswer(InvocationOnMock::getMock)
                         .invocationListeners(methodInvocationReport -> {
 
@@ -172,9 +172,9 @@ public class UmlGenerator {
     private static ApiModel api;
 
     public void addApi(ApiModel apiModel) {
-        List<ApiModel> apiModels = umlDocument.getApiModels();
+        List&lt;ApiModel&gt; apiModels = umlDocument.getApiModels();
         if (apiModels == null) {
-            apiModels = new ArrayList<>();
+            apiModels = new ArrayList();
             umlDocument.setApiModels(apiModels);
         }
         apiModels.add(apiModel);
@@ -182,7 +182,7 @@ public class UmlGenerator {
     }
 
     public void addServiceCall(ApiModel apiModel) {
-        List<ApiModel> serviceCalls = api.getServiceCalls();
+        List&lt;ApiModel&gt; serviceCalls = api.getServiceCalls();
         if (serviceCalls == null) {
             serviceCalls = new ArrayList<>();
             api.setServiceCalls(serviceCalls);
